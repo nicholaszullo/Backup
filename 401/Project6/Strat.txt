@@ -1,0 +1,27 @@
+Make step to neighbor function a recursive call, so it repeats itself and if dead end is ofound it bounces back to next call at previous point
+Make cell -1 when checked
+Unmark before recursion so bounce back to a 1 not a -1
+
+########################################
+PSUEDO CODE
+
+static void dfs(int r, int c, String path)
+{	
+	path =+ "[r,c]" 
+	if onEdge(r,c)
+		println path
+		return
+		
+	sequentially try N,NE,E etc 		//Cant use a loop, dont add an else
+	//look north
+	if	cell to the north is a 1
+		mark curr r,c as -1
+		dfs(r,c,path) //but the numbers according to N
+		unmark curr r,c back to 1
+	//Write for each direction but have different numbers for r,c depending on direction
+	if (NE == 1)
+		mark curr r,c as -1
+		dfs(r,c,path) //but the numbers according to NE
+		unmark curr r,c back to 1
+	//Continue until all directions
+}

@@ -1,0 +1,152 @@
+Notes:
+
+
+BufferedReader usage
+	BufferedReader br = new BufferedReader( new File(args[0]))
+		new BR with a file on the first input of commandline
+	.ready()
+	.readLine()
+Scanner usage
+	Scanner scan = new Scanner(System.in())
+
+
+10/31
+3 cases of inheritence //"DEFINETLY ON TEST"
+	1)A class that derives/extends from a parent class "inherited from parent"
+		Can use the child class in any situation that the parent can be used
+		Special account is an account method(Account n) can take a SpecialAccount
+	2)Abstract class
+		Incomplete class that contains incomplete methods
+		Used as a parent class 
+		Child class must contain all abstract methods from parent
+	3)Interface 
+		Use impliments not extends
+		Child class must contain all abstract methods from implimented part of interface 
+		Interfaces dont have constructors
+		Can impliment more than one interface, not more than one abstract class
+
+myString 
+	constructors
+		myString(String s)
+		myString(myString s)
+			Should convert to string then call myString(s)
+	equals should just be a call to compareTo
+	indexOf(String s) should start at indexOf(char a)
+#################################################################################################
+11/5 11/7
+Sets 
+	include objects not primatives
+	No dupes
+	Must have a defined equality test
+	Methods:
+		boolean add() 			//False if a dupe exists
+		boolean contains() 		//True if contains
+		int size() 				//Cardinality of set
+		.
+		.
+		.
+HashSet
+	add, contains, size, all have O(1) time to opperate
+	The string uniquely determines the value of the hash number
+	To hash a string of lowercase letters, do ascii value of letter*26^n where n is the distance from the right
+	when hash starts to overflow, wrap around to start
+		when two strings are the same value, place it in the "bucket" 
+		hashset is array of references to "buckets" where all the strings with same value are contained
+	When elements are retrieved, no order at all to how you get them
+		but every element will be retrieved and no dupes
+	Much faster than arrays, but no ordering
+	No sorting allowed
+HashMap
+	a hashset with an extra column
+	2 parallel arrays
+	add two at a time
+		Add using .put(E,E)
+	each time an add to the first column array, add to the same spot in the second array
+	makes first add using hashset technology
+	First column are the "key"'s
+	Retrieve value on right side using .get(key) and it returns value assossiated with the key
+	.put with same key but different value will overwrite data matched with current key
+	.keySet().contains(e) is e contained in the first array
+		.containsKey(e)?
+		HashSet<String> keys = map.keySet(); .keySet returns a HashSet
+	.containsValue() accesses the 2nd array O(N) time
+
+11/7
+TreeSet
+	Upside down tree, root at top, each node has 2 children, value on the left is less than value on right and root node
+	Log retrieval time, not constant 
+	Every opperation except for .size is log(b2)(n)
+	O(log(b2)(n) container
+	Self correcting to triangular
+	Binary search tree if triangular has log2n time to reach bottom
+	Works very well in fragmented memory 
+	ONLY NEED TO REMEBER IT IS JUST LIKE HASHSET AND HASHMAP BUT SORTED
+	Alphabatized in sorted order / what is defined by Comparable interface
+	Anything added to a TreeSet must impliment comparable interface 
+Choosing between Hashset and TreeSet
+	Does order matter? TreeSet
+	Does speed matter? Hashset
+TreeMap
+	Same idea as HashMap
+	Sorts based on Key
+	
+TreeSet and TreeMap have the same calls as hashset and hashmap
+
+11/12
+ArrayList Summary
+	Collections is static so don't need to say "new Collections", can just call the methods
+	Hides a private array behind various methods
+	Follows array discipline
+	Array stores references to data stored in heap
+	Does good data hiding and encapslation
+	O(N) Container
+HashSet Summary
+	Uses a private array behind various methods
+	Does not follow array discipline
+	.add(e) calls .hashCode(e) and finds the unique value of the (e)
+	O(1) time to .add with respect to elements in array already
+	O(1) Container
+	
+#################################################################################################
+11/26
+GUIs
+	To make a GUI
+		Must import .awt.* and javax.swing.*
+		Must create a main window using JFrame
+			JFrame window = new JFrame("");
+			window.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE)
+			or .EXIT_ON_CLOSE, also the default if one is not specified
+				Makes it so the X button doesn't work
+				do nothing on close is a final, static, public variable in JFrame class
+		JLabel displays text given in constructor
+			inactive version of JButton
+			make a border with setBorder
+		Displays are not visible unless added to JFrame
+			Never directly add to JFrame
+			Create a container to add to using Container content = new window.getContentPane()
+				content.add(E)
+		window.setSize(640,480)
+		window.setVisible(true)
+	Between last line of main and end of program, Java runs the event loop, which prevents the program from instantly ending without interaction
+	Event driven
+	class MyListener impliments ActionListener needed in first class to have any interation with the buttons 
+		no main method
+		public void actionPerformed(ActionEvent e)
+		Button gets attached to class and calls method when clicked
+		Not called inside code
+		ActionListener listener = new MyListener();
+		button.addActionListener(listener)
+		e.getSource() needed to access the type of event that was triggered
+		
+	A type of GUI format
+		content.setLayout(new FlowLayout())
+			moves everything up to the top and center
+	
+Final Exam Coding Assignment "Very small"
+	Extend a class and add a few lines of code
+	or
+	Problem using TreeMap or TreeSet like woodchuck example
+	Can use anything store
+	
+	
+	

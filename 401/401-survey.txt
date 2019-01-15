@@ -1,0 +1,117 @@
+UNIVERSITY OF PITTSBURGH SUMMER 2018 CS/COE 401 
+
+--------------------------------------------------------
+I have done some non trivial programming in the following programming languages:
+
+[  ] NONE
+
+[ x ] JAVA  
+
+[  ] C
+
+[  ] C++
+
+[  ] FORTRAN
+
+[  ] PASCAL
+
+[  ] PHP
+
+[ x ] PYTHON
+
+[  ] PERL
+
+[  ] RUBY
+
+[  ] BASH or SH or CSH or KORN etc
+
+[  ] MATLAB
+
+[  ] VISUAL BASIC
+
+
+
+List any computer science courses you have taken in High School/College/Tech School etc.
+
+
+1) Computer Science (Intro to Java)
+
+
+2) AP Computer Science
+
+
+3) Independant study of python with AP Comp Sci teacher 
+
+
+
+I understand these concepts from arithmetic:
+
+[ x ] arithmetic operators  + - / *
+
+[ x ] precedence of operations
+
+[ ] boolean logic  AND NOT OR XOR
+
+
+
+
+I understand these concepts from set theory:
+
+[ ] union, intersection
+
+[ ] set difference
+
+[ ] XOR
+
+[ ] cardinality, membership
+
+
+I understand the following programming concepts fairly well:
+
+[ x] a variable
+
+[ x] data types such as integer flaoting point string boolean
+
+[ x] an if else statement
+
+[ x] iteration & loops  such as while loop, for loop, do loop
+
+[x ] method/functions/subroutines
+
+[x ] passing parameters and return values
+
+[ x] arrays
+
+[ x] reading writing files
+
+[ x] recursion
+
+[ ] backtracking
+
+[ ] dynamic programming
+
+
+It has been this long since I have written a non trivial program
+
+[ ] Never wrote any programs
+
+[x ] more than a couple months
+
+[ ] over a year
+
+[ ] a few years
+
+
+
+I have heard that this course is:
+
+[ ] very easy 
+
+[ ] moderately easy
+
+[ ] hard
+
+[ ] extremely hard
+
+[x ] heard nothing about it / no idea
+

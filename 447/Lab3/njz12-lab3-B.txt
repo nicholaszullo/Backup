@@ -1,0 +1,6 @@
+B1)0x1d1c1b1a
+B2)0x10010001
+B3)0x1a1b1c1d
+B4)1d
+B5)1a
+B6)Little endian because the most significant bit is placed on the right in data segment

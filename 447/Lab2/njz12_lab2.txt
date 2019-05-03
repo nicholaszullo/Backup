@@ -1,0 +1,12 @@
+A1)		(2^16)
+A2)		-(2^16) to (2^16)-1
+A3) 	32 bits
+A4)		lui $1 and ori $8,$1
+A5)		lui = 0x3c01b357 ori = 0x3428c0de
+
+C1)x = 0x10010000
+C2)y = 0x10010002
+C3)z = 0x10010004
+C4)2752554
+C5) Error: fetch address not aligned on word boundary 0x10010002
+C6)0

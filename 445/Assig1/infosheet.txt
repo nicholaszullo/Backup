@@ -1,0 +1,41 @@
+CS 0445 Assignment Information Sheet
+
+ 
+
+You must electronically submit an information sheet with every assignment. Also be sure to submit all materials following the procedures described on the submission procedures page.
+
+Name: Nick Zullo Assignment #: 1
+
+Lecture Day and Time: T Th 9:30-10:45
+
+Recitation Day and Time: T 3-3:50
+
+Program Due Date: 2/4/19 11:59 PM
+
+Handed in Date: 2/4/19 
+
+Source code (.java) file name(s):
+
+Assig1 (driver), SimBank, Teller, Customer, SimEvent, ArrivalEvent, CompletionEvent, CompletionLocEvent, RandDist
+
+
+Input / output file name(s) (if applicable): Only command line input required
+
+
+Does your program compile without error?: Yes 
+
+If not, what is/are the error(s)?:
+
+Does your program run without error?: Yes 
+
+If not, what is/are the error(s) and which parts of your program run correctly?:
+
+
+Additional comments (including problems and extra credit):
+
+I finished the assignment before the rubric was posted and it worked without a teller class. I had to rewrite some things to work with the new class.
+It would have been better to know I had to use a teller class from the begining so I didnt have to spend time writing it a different way when it 
+already worked. I also couldn't get my output to match the sample output exactly because the input conditions were never given. It would have
+been nice to know the seed of the sample output to compare my data with and see if there is a problem somewhere.
+
+ 

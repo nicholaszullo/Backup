@@ -1,0 +1,97 @@
+> java Assig4 huff1.txt
+
+The Huffman Tree has been restored
+
+Please choose from the following:
+1) Encode a text string
+2) Decode a Huffman string
+3) Quit
+1
+Enter a String from the following characters: 
+ABCDEF
+BAD
+Huffman String:
+111
+0
+100
+
+Please choose from the following:
+1) Encode a text string
+2) Decode a Huffman string
+3) Quit
+2
+Here is the encoding table:
+A: 0
+B: 111
+C: 110
+D: 100
+E: 1010
+F: 1011
+Please enter a Huffman string (one line, no spaces)
+1110100
+Text string:
+BAD
+
+Please choose from the following:
+1) Encode a text string
+2) Decode a Huffman string
+3) Quit
+1
+Enter a String from the following characters: 
+ABCDEF
+CAFE
+Huffman String:
+110
+0
+1011
+1010
+
+Please choose from the following:
+1) Encode a text string
+2) Decode a Huffman string
+3) Quit
+2
+Here is the encoding table:
+A: 0
+B: 111
+C: 110
+D: 100
+E: 1010
+F: 1011
+Please enter a Huffman string (one line, no spaces)
+110010111010
+Text string:
+CAFE
+
+Please choose from the following:
+1) Encode a text string
+2) Decode a Huffman string
+3) Quit
+1
+Enter a String from the following characters: 
+ABCDEF
+Q
+There was an error in your text string
+
+Please choose from the following:
+1) Encode a text string
+2) Decode a Huffman string
+3) Quit
+2
+Here is the encoding table:
+A: 0
+B: 111
+C: 110
+D: 100
+E: 1010
+F: 1011
+Please enter a Huffman string (one line, no spaces)
+01
+There was an error in your Huffman string
+
+Please choose from the following:
+1) Encode a text string
+2) Decode a Huffman string
+3) Quit
+3
+Good-bye

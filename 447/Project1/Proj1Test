@@ -1,0 +1,12 @@
+.globl main
+main:
+label2:	addiu t1,t1,0x32f3
+	bge t1,$0, label1
+	ori s1, s0, 0xf3f3
+label1:	addu s2,s1,t1
+	addiu s3,s2, 0xff2f4
+ 	or s4,s3,t1
+	beq s3,s1,label2
+	addiu s1,s2, 0x33f33f
+	blt  $s0,$t0,label1
+	ori s1,s0,0xf3f3f4

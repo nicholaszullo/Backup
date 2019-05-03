@@ -1,0 +1,13 @@
+Nick Zullo CS 445 2/2/19
+Assignment 1 write up
+
+1)The single queue bank method seems to be preferable. The single queue structure results in lower times in maximum wait times, 
+both average wait times, and average total time in the bank. Using a single queue is overall better for the customer than 1 queue per teller.
+For example, the maximum wait time was reduced by 20 minutes when a single queue is used compared to the mulitqueue with 4 tellers.
+Customers spent on average less time in the bank with 1 queue, which is best to keep customers happy.
+2)I believe that 3 tellers are the ideal number of tellers. With 3 tellers, all 3 are used evenly by customers coming into the bank.
+With 4 tellers, while they are evenly distributed for a multiqueue, we are looking at the single queue numbers. Using 4 tellers in a single
+queue brings the average wait time per customer down by 5 minutes, but does not evenly use all 4 tellers. This means that some money is wasted
+paying for a 4th teller to do less work. It is more ideal for the customer to have as many tellers as possible, but for business it is best to have 3.
+The more tellers in the bank the smaller the wait time, which is ideal for customers. A 3 teller bank also turns away a similar amount of customers
+as a 4 teller bank, both small numbers. More customers had to wait with 3 tellers, but it is not better for the business to pay for 4 tellers.

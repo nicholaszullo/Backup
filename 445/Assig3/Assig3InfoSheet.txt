@@ -1,0 +1,34 @@
+CS 0445 Assignment Information Sheet
+
+ 
+
+You must electronically submit an information sheet with every assignment. Also be sure to submit all materials following the procedures described on the submission procedures page.
+
+Name:Nick Zullo Assignment #: 3
+
+Lecture Day and Time: T Th 9:30 - 10:45
+
+Recitation Day and Time: T 3-3:50
+
+Program Due Date: 3/21/19
+
+Handed in Date: 3/23/19 
+
+Source code (.java) file name(s):
+
+Assig3.java MyStringBuilder2.java
+
+Input / output file name(s) (if applicable): 
+No input needed
+Does your program compile without error?: 
+Yes 
+
+If not, what is/are the error(s)?:
+Does your program run without error?: 
+Yes 
+
+If not, what is/are the error(s) and which parts of your program run correctly?:
+
+Additional comments (including problems and extra credit):
+The RegMatch help sheet was confusing but still helpful. It wasn't as hard as it was made out to be once you could trace what was happening
+ 

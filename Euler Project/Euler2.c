@@ -1,5 +1,7 @@
 /*
 *   Sum of even valued fibonocci series numbers less than 4000000
+*
+*   O(N)
 */
 
 #include <stdio.h>

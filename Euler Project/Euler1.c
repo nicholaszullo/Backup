@@ -1,5 +1,7 @@
 /*
 *   Sums all multiples of 3 or 5 less than 1000
+*
+*   O(N)s
 */
 
 #include <stdio.h>

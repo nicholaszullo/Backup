@@ -2,6 +2,8 @@
  *  we can see that the 6th prime is 13.
  *
  *  What is the 10001st prime number?
+ * 
+ *  O(N)
  */
 
 

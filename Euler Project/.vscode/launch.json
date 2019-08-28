@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - Euler11",
+            "request": "launch",
+            "mainClass": "Euler11",
+            "projectName": "Euler Project_4908181a"
+        }
+    ]
+}

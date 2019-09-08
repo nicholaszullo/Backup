@@ -1,7 +1,7 @@
 /* 
  * CS:APP Data Lab 
  * 
- * <Please put your name and userid here>
+ * <Nick Zullo njz12>
  * 
  * bits.c - Source file with your solutions to the Lab.
  *          This is the file you will hand in to your instructor.
@@ -154,7 +154,7 @@ int bitXor(int x, int y) {
  *   Rating: 1
  */
 int tmin(void) {
-	
+	return 1 << 31;	
 }
 //2
 /* 
@@ -166,7 +166,11 @@ int tmin(void) {
  *   Rating: 2
  */
 int allOddBits(int x) {
-	return 2;
+	int odd1 = (((((0xAA << 8) | 0xAA) << 8) | 0xAA) << 8) | 0xAA;	//Make mask of 0xAAAAAAAA
+	int result = x & odd1;
+	int even1 = ~odd1;
+	result = result | even1;						//At this point if all are odd are 1 result == 0xFFFFFFFF
+	return (!(~result));							
 }
 //3
 /* 
@@ -177,7 +181,12 @@ int allOddBits(int x) {
  *   Rating: 3
  */
 int conditional(int x, int y, int z) {
-	return 2;
+	int pick = !(!x);				//1 if x is 1 or 0 if x is 0
+	int mask = ~pick + 1;				//-1 if x is 1 (~1 = 1111..10 +1 = all 1's) or 0 (~0 is all 1's +1 is 0) if x is 0
+	int result = y & mask;				//either y or 0
+	int result2 = z & ~mask;			//either 0 or z
+	return (result | result2);			//0 or (y or z) 
+		
 }
 //4
 /* 
@@ -188,8 +197,11 @@ int conditional(int x, int y, int z) {
  *   Max ops: 12
  *   Rating: 4 
  */
-int logicalNeg(int x) {
-	return 2;
+int logicalNeg(int x){
+	int result = ~x+1;                      //Flip number
+	result = ~(result | x);                 //all 1's then flip to 0's if x is not 0, or all 0 then flip to all 1 if x= 0
+	result = (result >> 31) & 1;            //Take MSB down to LSB and return 1 if it is 1 or 0 if it is 0 
+	return result;
 }
 //float
 /* 
@@ -205,5 +217,36 @@ int logicalNeg(int x) {
  *   Rating: 4
  */
 int floatFloat2Int(unsigned uf) {
-	return 2;
+	int sign = (uf >> 31) & 1;
+	int exp = uf >> 23;	
+	int mask = 0xFF;
+	int frac, sum;
+	int i = 0;
+	exp = exp & mask;				
+	
+	if (exp == 0xFF)			//If uf is infinity or NaN return designated value 
+		return 0x80000000;//return 0x7FC00000u;		//Directions say return 0x7fc but autograder uses 0x8000????
+ 	if (exp < 127) 				//If number is less than 0 return 0
+		return 0;
+	
+	//Continue with deciphering bits
+	exp = exp - 127;			//Apply bias	
+	if (exp > 24)				//If 2^exp is larger than max int value overflow so return invalid
+		return 0x80000000;
+				
+	sum = 0;
+	frac = uf >> (23 - exp);		//Move frac bits into position (will be left with bits in frac that come before the decimal point)	
+	
+	for (; i < exp ; i++){
+		if ((sum + (frac%2)*(1<<i)) < sum)			//If overflow return invalid
+			return 0x80000000;
+		sum += (frac % 2)*(1<<i);	//Interpret bits into value they are representing
+		frac = frac >> 1;		//Move to next bit
+	}
+	exp = 1 << exp;				//exp = 2^exp 
+	sum = sum + exp;			//Number being represented is value of exp and value of whole numbers in frac
+	if (sign == 1)				//make negative if negative
+		sum = sum *-1;
+
+	return sum;
 }

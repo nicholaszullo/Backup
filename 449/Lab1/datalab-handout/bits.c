@@ -154,7 +154,7 @@ int bitXor(int x, int y) {
  *   Rating: 1
  */
 int tmin(void) {
-	return 1 << 31;	
+	return 1 << 31;									//tmin is 1000..0
 }
 //2
 /* 
@@ -168,7 +168,7 @@ int tmin(void) {
 int allOddBits(int x) {
 	int odd1 = (((((0xAA << 8) | 0xAA) << 8) | 0xAA) << 8) | 0xAA;	//Make mask of 0xAAAAAAAA
 	int result = x & odd1;
-	int even1 = ~odd1;
+	int even1 = ~odd1;								//Mask of all even bits
 	result = result | even1;						//At this point if all are odd are 1 result == 0xFFFFFFFF
 	return (!(~result));							
 }
@@ -199,7 +199,7 @@ int conditional(int x, int y, int z) {
  */
 int logicalNeg(int x){
 	int result = ~x+1;                      //Flip number
-	result = ~(result | x);                 //all 1's then flip to 0's if x is not 0, or all 0 then flip to all 1 if x= 0
+	result = ~(result | x);                 //If 0 result is -1 otherwise result has MSB of 0
 	result = (result >> 31) & 1;            //Take MSB down to LSB and return 1 if it is 1 or 0 if it is 0 
 	return result;
 }

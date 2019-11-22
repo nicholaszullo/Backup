@@ -1,0 +1,18 @@
+[submodule "1501/project0"]
+	path = 1501/project0
+	url = https://github.com/PittCS1501/njz12-project0
+[submodule "1501/project1"]
+	path = 1501/project1
+	url = https://github.com/PittCS1501/njz12-project1
+[submodule "1501/project2"]
+	path = 1501/project2
+	url = https://github.com/PittCS1501/njz12-project2
+[submodule "1501/project3"]
+	path = 1501/project3
+	url = https://github.com/PittCS1501/njz12-project3
+[submodule "1501/project4"]
+	path = 1501/project4
+	url = https://github.com/PittCS1501/njz12-project4
+[submodule "1501/project5"]
+	path = 1501/project5
+	url = https://github.com/PittCS1501/njz12-project5

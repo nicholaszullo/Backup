@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - AptTracker",
+            "request": "launch",
+            "mainClass": "AptTracker",
+            "projectName": "njz12-project3_de66de8a"
+        }
+    ]
+}

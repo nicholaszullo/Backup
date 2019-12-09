@@ -1,0 +1,40 @@
+========================================
+CS/COE 1501 Assignment Information Sheet
+----------------------------------------
+
+You must submit an information sheet with every assignment.  Also be sure
+to submit all materials following the procedures described on the
+submission procedures page.
+
+Name:  
+Nicholas Zullo
+Lecture section:  
+T Th 9:30 - 10:45
+Recitation day and time:  
+F 11-11:50
+Assignment #:  
+1
+Program due date:  
+9/25/19 11:59 PM
+Handed in date:  
+9/25/19
+Source code file name(s):
+ac_test.java
+DLBHandler.java
+Node.java
+
+Other file name(s) (if relevant):
+Need dictionary.txt to be in the same directory as ac_test.java. user_history.txt should also be in the same directory, or a new one will be created
+
+
+
+
+Does your program run without error?:
+Yes
+
+If not, what is/are the error(s) and which parts of your program run
+correctly?:
+
+
+Additional comments to the grader:
+

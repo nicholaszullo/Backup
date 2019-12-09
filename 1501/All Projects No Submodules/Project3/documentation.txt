@@ -1,0 +1,8 @@
+My implementation of this assignment uses 2 heaps, and 1 backs a priority queue. The non pq heap is a normal max heap that stores
+the maximum square footage of a set of apartments. The PQ heap stores the min rent as max priority. Adding an element to a heap is 
+O(log(n)), removing is O(log(n)), updating an element requires it to be moved to its new location which is O(log(n)), and a retrieval
+of the max area or min rent is O(1). Adding/removing/updating 1 apartment to 4 different structures is O(4log(n)) which is still within 
+the required runtime. The heaps are indexed based on a hash value, and the program assumes no more than 256 apartments will be added.
+The cities array stores all the current cities the apartments are in, and the hash used is the hash in the City class. The hash used to
+index the PQ and max heap is stored in the Apartment class. Using a hash like this allows for a large amount of cities and apartments 
+to be stored and O(1) access to see if a city already exists and to find the heaps for a given city.

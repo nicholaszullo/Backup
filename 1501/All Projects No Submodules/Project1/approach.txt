@@ -1,0 +1,7 @@
+The user history is stored the same way as the dictionary, in a DLB. To account for frequency, a variable "freq" in each Node is used to store the number of times
+a word is attempted to be added to the trie. Freq is 1 in every node except for the node containing '$'. At the $ node, a word has finished trying to
+insert into the trie. If the word exists already, update the freq variable for the duplicate. If it is the first time entering the word into the trie,
+create a new '$' node for the end of that word with a freq of 1. 
+
+The Trie was created entirely by me. A TreeMap was used to easily store predictions from user sorted by history. TreeMap is able to add in O(log(N))
+on average where N is number of keys currently in TreeMap.keyset(). 

@@ -1,0 +1,32 @@
+========================================
+CS/COE 1501 Assignment Information Sheet
+----------------------------------------
+
+You must submit an information sheet with every assignment.  Also be sure
+to submit all materials following the procedures described on the
+submission procedures page.
+
+Name:  Nick Zullo
+
+Lecture section: T Th 9:30-10:45 
+
+Recitation day and time:  F 11-11:50
+
+Assignment #:  4
+
+Program due date:   11/12/19  
+
+Handed in date:     11/12/19
+
+Source code file name(s):   NetworkAnalysis.java Vertex.java Node.java Edge.java IndexMinPQ.java
+
+Other file name(s) (if relevant): network_data1.txt network_data2.txt
+
+Does your program run without error?: Yes
+
+If not, what is/are the error(s) and which parts of your program run
+correctly?:
+
+Additional comments to the grader: 
+When running network_data2 and finding the min tree, keeping the seen[] array commented out yields a min path to 2 as from 5 with latency 8.69 E-8.
+However, with the seen array used, the path is from 0 with latency 1.74E-7. I believe it is correct with the seen[] array commented out, but the expected output is not posted so I'm not sure. 

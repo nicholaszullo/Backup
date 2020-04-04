@@ -63,7 +63,7 @@ public class vmsim {
             }
             pagefaults++;
             if (pages.size() < framenum){                   //Room in the page table
-                if (mode == 's'){                          //Add new page with a true dirty bit or not
+                if (mode == 's'){                           //Add new page with a true dirty bit or not
                     pages.addFirst(new Page(address, true));
                 } else{
                     pages.addFirst(new Page(address));  
@@ -132,7 +132,8 @@ public class vmsim {
                     if (mode == 's'){                       //Set dirty bit when a store
                         pages.get(i).dirty = true;
                     }
-                    pages.get(i).line.removeFirst();
+                    if (pages.get(i).line.size() !=0 )
+                        pages.get(i).line.removeFirst();
                     break;                                  //No need to search rest of list once page is found
                 }
                 
@@ -146,7 +147,9 @@ public class vmsim {
                     table.get(address).dirty = true;
 
                 pages.add(table.get(address));
-                
+                if (table.get(address).line.size() != 0)
+                    table.get(address).line.removeFirst();
+
             } else if (pages.size() == framenum){   //Page to remove is one with largest distTo 
                 int remove = 0;
                 long largestDist = 0;
@@ -158,14 +161,12 @@ public class vmsim {
                     }
                     if (largestDist < (pages.get(i).line.getFirst()-accesses)){
                         largestDist = pages.get(i).line.getFirst()-accesses;        //DistTo is next access in list - currrent position
-                        remove = i;
+                        remove = i;                                                 //Page to remove
                     }
                    
                 }
 
-
                 Page holder = pages.remove(remove);
-                pages.get(remove).line.removeFirst();                                //Remove the next access from the list
                 
                 if (holder.dirty){                          //Write to disk on removal
                     writes++;
@@ -175,7 +176,7 @@ public class vmsim {
                     table.get(address).dirty = true;
                 
                 pages.add(table.get(address));
-            
+                table.get(address).line.removeFirst();
             } else if (pages.size() > framenum){                                        //More frames in page table than specified
                 System.out.println("ERROR MORE FRAMES USED THAN GIVEN");
                 System.exit(0);
@@ -191,13 +192,13 @@ public class vmsim {
     //NOT MATCHING OUTPUT ON PIAZZA
     public static void SCU(){
         LinkedList<Page> pages = new LinkedList<Page>();
+        int clock = 0;
         while (scan.hasNext()){
             accesses++;
             char mode = scan.next().charAt(0);
             long address = Long.decode(scan.next());
             address = address >>> 12;
             boolean hit = false;
-            
             for (int i = 0; i < pages.size(); i++){
                 if (address == pages.get(i).address){
                     hit = true;
@@ -214,34 +215,38 @@ public class vmsim {
             }
             pagefaults++;
             if (pages.size() < framenum){
-                if (mode == 's'){
-                    pages.add(new Page(address, true));
-                } else{
-                    pages.add(new Page(address));
-                }
-            } else if (pages.size() == framenum){    
-                Page holder = null;  
+                if (mode == 's')
+                    pages.add(clock++,new Page(address, true));
+                else 
+                    pages.add(clock++,new Page(address));
+                
+            } else if (pages.size() == framenum){
+                Page removed = null;
                 for (int i = 0; i < pages.size(); i++){
-                    if (pages.get(i).second == true){
-                        pages.get(i).second = false;
-                        pages.add(pages.remove(i));
+                    if (clock == pages.size())
+                        clock = 0;
+                    if (pages.get(clock).second){
+                        pages.get(clock).second = false;
+                        clock++;
+                        if (clock == pages.size())
+                            clock = 0;
                     } else {
-                        holder = pages.remove(i);
-                        break;
+                        removed = pages.remove(clock); 
+                        break;                                          //Dont continue the search 
                     }
                 }
-                if (holder == null){
-                    holder = pages.removeFirst();
-                }
                 
-                if (holder.dirty){
+                if (removed == null){
+                    removed = pages.remove(clock);
+                }
+                if (removed.dirty)
                     writes++;
-                }
-                if (mode == 's'){
-                    pages.add(new Page(address, true));
-                } else{
-                    pages.add(new Page(address));  
-                }
+                
+                if (mode == 's')
+                    pages.add(clock++,new Page(address, true));
+                else 
+                    pages.add(clock++,new Page(address));
+
             } else {
                 System.out.println("ERROR MORE FRAMES USED THAN GIVEN");
                 System.exit(0);

@@ -1,0 +1,61 @@
+Results for gzip.trace
+Algorithm: LRU
+Number of frames: 8
+Total memory accesses: 481044
+Total page faults: 39905
+Total writes to disk: 39864
+Algorithm: LRU
+Number of frames: 16
+Total memory accesses: 481044
+Total page faults: 39883
+Total writes to disk: 39845
+Algorithm: LRU
+Number of frames: 32
+Total memory accesses: 481044
+Total page faults: 39874
+Total writes to disk: 39822
+Algorithm: LRU
+Number of frames: 64
+Total memory accesses: 481044
+Total page faults: 39874
+Total writes to disk: 39790
+Algorithm: OPT
+Number of frames: 8
+Total memory accesses: 481044
+Total page faults: 39874
+Total writes to disk: 39845
+Algorithm: OPT
+Number of frames: 16
+Total memory accesses: 481044
+Total page faults: 39856
+Total writes to disk: 39829
+Algorithm: OPT
+Number of frames: 32
+Total memory accesses: 481044
+Total page faults: 39856
+Total writes to disk: 39824
+Algorithm: OPT
+Number of frames: 64
+Total memory accesses: 481044
+Total page faults: 39856
+Total writes to disk: 39792
+Algorithm: SECOND
+Number of frames: 8
+Total memory accesses: 481044
+Total page faults: 39912
+Total writes to disk: 39866
+Algorithm: SECOND
+Number of frames: 16
+Total memory accesses: 481044
+Total page faults: 39888
+Total writes to disk: 39849
+Algorithm: SECOND
+Number of frames: 32
+Total memory accesses: 481044
+Total page faults: 39874
+Total writes to disk: 39822
+Algorithm: SECOND
+Number of frames: 64
+Total memory accesses: 481044
+Total page faults: 39874
+Total writes to disk: 39790

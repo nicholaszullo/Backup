@@ -5,7 +5,15 @@
     This program can be distributed under the terms of the GNU GPL.
     See the file COPYING.
 */
+/*
+        HOW TO RUN THIS FILE:
+        dd bs=1K count=5K if=/dev/zero of=.disk     create a 5 MB disk file named .disk
+        In one terminal, run ./cs1550 -d <mount directory>
+        In another terminal, run file commands
+        If a segfault or any similar program crash, run fusermount -u <mount directory>
 
+
+*/
 #define	FUSE_USE_VERSION 26
 
 #include <fuse.h>

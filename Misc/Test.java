@@ -1,12 +1,19 @@
-public class Test{
+import java.util.Scanner;
+
+public class Test {
+
+	int a;
+	int b;
+	public Test(){
+		a = 1;
+		b = 2; 
+	}
+	
 
     public static void main(String[] args)
     {
-        int a = 2+2;
-        System.out.println(a);
-
-
-
+        Test tes = new Test();
+		System.out.println(tes.a + " " + tes.b);
     }
 
 

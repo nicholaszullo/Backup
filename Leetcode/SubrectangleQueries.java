@@ -1,9 +1,9 @@
 /**
  *  N represents rows, M represents columns 
- *  Constructor runtime O(N*M)
+ *  Constructor runtime O(N*M)  Can be O(1) if make a shallow copy instead of a deep copy
  *  updateSubrectangle  O(N*M) worst case
  *  getValue O(1)
- *  Memory O(N*M)
+ *  Memory O(N*M)   Can be O(1) if make a shallow copy instead of a deep copy
  */
 public class SubrectangleQueries {
     int[][] rectangle;

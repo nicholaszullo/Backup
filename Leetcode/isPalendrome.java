@@ -1,5 +1,5 @@
 /**
- * Runtime O(N) Leetcode will not give lowest runtime even though it is
+ * Runtime O(N) Leetcode will not give lowest runtime even though it is (now it did)
  * Memory O(1)
  */
 

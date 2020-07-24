@@ -2,12 +2,12 @@
  * Runtime O(N*M) where N is number of characters in first word and M is the number of words
  * Memory O(1)
  * 
- * Now starts searching from end of string backwards, faster empirical runtime but not fastest
+ * Removed extra call to substring and equals, 1ms empirical runtime
  */
 
 public class LongestPrefix {
 	public static void main(String[] args) {
-		String[] strs = {"a"};
+		String[] strs = {"aaa", "abaa","aaaa"};
 		System.out.println(longestCommonPrefix(strs));
 	}
 	public static String longestCommonPrefix(String[] strs) {
@@ -18,7 +18,7 @@ public class LongestPrefix {
 			boolean finished = true;
 			for (int word = 1; word < strs.length; word++){
 				try {
-					if (!strs[word].substring(0, currPre).equals(curr)){
+					if (strs[word].indexOf(curr) != 0){
 						finished = false;
 						break;
 					}

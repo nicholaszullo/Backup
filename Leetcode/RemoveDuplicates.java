@@ -1,34 +1,21 @@
-/**
- * 	Brute force solution, first one that came to mind. No optimizations
- * 	Runtime O(N^2) worst case
+/**	found same solution as leetcode! same strategy from PalandromeLinkedList. Use a fast and slow pointer to traverse in O(N) time
+ * 	Runtime O(N)
  * 	Memory O(1)
  */
 
 public class RemoveDuplicates {
 	public static void main(String[] args) {
 		int[] arr = {0,0,1,1,1,2,2,3,3,4};
-		System.out.println(removeDuplicates(arr));
+		System.out.println(removeDuplicates(arr) + " expected 5");
 	}
 	public static int removeDuplicates(int[] nums) {
-		int length = nums.length;
-        for (int i = 0; i < length-1; i++){
-			for (int a : nums){
-				System.out.print(a + " ");
-			}
-			System.out.println("on i = " + i);
-			if (nums[i] == nums[i+1]){
-				shiftLeft(i, nums);
-				length--;
-				i--;
+		int i = 0;
+		for (int j = 1; j < nums.length; j++){
+			if (nums[i] != nums[j]){
+				nums[i+1] = nums[j];
+				i++;
 			}
 		}
-		return length;
-    }
-    public static void shiftLeft(int index, int[] arr){
-        int toEnd = arr[index];
-        for (; index < arr.length-1; index++){
-            arr[index] = arr[index+1];
-        }
-        arr[arr.length-1] = toEnd;
-    }
+		return i+1;
+	}
 }

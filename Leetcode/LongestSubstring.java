@@ -1,9 +1,7 @@
 /**
- * Runtime O(N^2) worst case (all unique)
+ * Runtime O(N^2) worst case (all unique)	Slightly faster than before but still slow
  * Memory O(N) 
  */
-
-import java.util.ArrayList;
 import java.util.HashSet;
 
 public class LongestSubstring {
@@ -11,27 +9,21 @@ public class LongestSubstring {
 		System.out.println(lengthOfLongestSubstring("abcccdefg") + " expected 5");
 	}
 	public static int lengthOfLongestSubstring(String s) {
+		int longest = 0;
 		HashSet<Character> seen;
-		ArrayList<String> solutions = new ArrayList<String>();
-        for (int i = 0; i < s.length(); i++){
+		for (int i = 0; i < s.length()-longest; i++){
 			seen = new HashSet<Character>();
-			boolean stop = false;
+			int currLength =0; 
 			for (int j = i; j < s.length(); j++){
-				if (!seen.add(s.charAt(j))){
-					System.out.println("duplicate found! adding " + s.substring(i,j-1));
-					solutions.add(s.substring(i,j-1));
-					stop = true;
+				if (seen.add(s.charAt(j))){
+					currLength++;
+				} else {
 					break;
 				}
 			}
-			if (!stop)
-				solutions.add(s.substring(i, s.length()));
+			if (longest < currLength)
+				longest = currLength;
 		}
-		int largest = 0;
-		for (int i = 0; i < solutions.size(); i++){
-			if (solutions.get(i).length() >= solutions.get(largest).length())
-				largest = i;
-		}
-		return solutions.get(largest).length();
-    }
+		return longest;
+	}
 }

@@ -1,0 +1,58 @@
+/**	How is this medium difficulty? Just an if else ladder
+ * 	Runtime O(N)	N is number of digits 
+ * 	Memory O(N)
+ * 
+ */
+
+public class IntToRoman{
+	public static void main(String[] args) {
+		System.out.println(intToRoman(573890) + " expected ?");
+	}
+	public static String intToRoman(int num){
+		StringBuilder answer = new StringBuilder();
+		while (num > 0){
+			if (num-1000 > 0){
+				answer.append("M");
+				num -= 1000;
+			} else if (num - 900 >= 0){
+				answer.append("CM");
+				num -= 900;
+			} else if (num - 500 >= 0){
+				answer.append("D");
+				num -= 500;
+			} else if(num - 400 >= 0){
+				answer.append("CD");
+				num-= 400;
+			} else if (num - 100 >= 0){
+				answer.append("C");
+				num -= 100;
+			} else if (num - 90 >= 0){
+				answer.append("XC");
+				num -= 90;
+			} else if (num - 50 >= 0){
+				answer.append("L");
+				num -= 50;
+			} else if (num - 40 >= 0){
+				answer.append("XL");
+				num -= 40;
+			} else if (num - 10 >= 0){
+				answer.append("X");
+				num -= 10;
+			} else if (num - 9 >= 0){
+				answer.append("IX");
+				num -= 9;
+			} else if (num - 5 >= 0){
+				answer.append("V");
+				num -= 5;
+			} else if (num - 4 >= 0){
+				answer.append("IV");
+				num -= 4;
+			} else if (num - 1 >= 0){
+				answer.append("I");
+				num -= 1;
+			}
+		}
+		return answer.toString();
+	}
+
+}

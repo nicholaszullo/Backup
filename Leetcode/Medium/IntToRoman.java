@@ -11,7 +11,7 @@ public class IntToRoman{
 	public static String intToRoman(int num){
 		StringBuilder answer = new StringBuilder();
 		while (num > 0){
-			if (num-1000 > 0){
+			if (num-1000 >= 0){				//forgot this = sign whoops
 				answer.append("M");
 				num -= 1000;
 			} else if (num - 900 >= 0){

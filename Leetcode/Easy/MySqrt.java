@@ -7,7 +7,7 @@ public class MySqrt {
 		System.out.println(mySqrt(23456999) + " expected 4843");
 	}
 	public static int mySqrt(int x){			//Newtons Method
-		double curr = x-1;
+		double curr = x;
 		double ans = (curr+(x/curr))/2;
 		double prev = x;
 		curr = ans;

@@ -8,7 +8,7 @@
  */
 public class AddBinary {
 	public static void main(String[] args) {
-		System.out.println(addBinary("1010111", "1011") + " expected 10101");
+		System.out.println(addBinary("1010", "1011") + " expected 10101");		//previous commit forgot to change these back to normal
 	}
 
 	public static String addBinary(String a, String b) {

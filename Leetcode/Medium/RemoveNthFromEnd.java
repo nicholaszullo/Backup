@@ -1,5 +1,5 @@
-/** 2 passes is still 0 ms, but it can be done in 1. Find out how!
- * 	Runtime O(N^2)
+/** 1 Pass
+ * 	Runtime O(N)
  * 	Memory O(1)
  */
 public class RemoveNthFromEnd {
@@ -7,24 +7,14 @@ public class RemoveNthFromEnd {
 		
 	}
 	public static ListNode removeNthFromEnd(ListNode head, int n) {
-		ListNode prevNth = null;
-		int num = 0;
-		for (ListNode curr = head; curr != null; curr = curr.next, num++);			//Find length
-		int size = num;
-		num = 0;
-		for (ListNode curr = head; curr != null && num != size-n; curr = curr.next, num++){		//Find node before removal
-			prevNth = curr;
-		}
-		if (prevNth == null){					//If null remove head
-			return head.next;
-		}
-		if (prevNth.next == null || prevNth.next.next == null){		//If at end of list set end to null
-			prevNth.next = null;
-		} else {
-			prevNth.next = prevNth.next.next;			//Link node after removal to this
-		}
-		return head;
-		
-
+		ListNode fast = head, slow = head;
+		int seen = 0;
+		for (; fast != null && seen <= n; fast = fast.next, seen++);		//Put a gap of n between slow and fast
+		for (; fast != null; fast = fast.next, slow = slow.next);			//Move fast to the end of the list, bringing slow along with it
+        if (seen == n){			//If second for never ran, seen == n, which means remove head
+            return head.next;
+        }
+		slow.next = slow.next.next;			//Unlink node to be removed
+		return head;			//Return the front of the list
     }
 }

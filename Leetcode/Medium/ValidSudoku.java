@@ -1,7 +1,7 @@
 /** Not using a hashset makes it 1ms. Why - no extra time allocating heap for objects most likely
  * 	Also removed checking if true was true in if statements, can just use the boolean value from array
  * Runtime O(N^2) where N is the length of row in the board
- * Memory O(N) top 97 in memory even with hashsets for row
+ * Memory O(N) More memory to use array than hashset
  */
 
 

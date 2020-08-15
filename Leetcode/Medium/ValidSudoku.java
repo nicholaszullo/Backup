@@ -1,47 +1,40 @@
-/**
- * Runtime O(3N^2)
- * Memory O(27N)
+/** Still 2ms online, fastest is 1. got rid of 2 double for loops, so its faster than before regardless
+ * Runtime O(N^2) where N is the length of row in the board
+ * Memory O(N) top 97 in memory even with hashsets for row
  */
 
 import java.util.HashSet;
 
 public class ValidSudoku {
 	public boolean isValidSudoku(char[][] board) {
-		HashSet<Character> seen = new HashSet<Character>();
-		for (int i = 0; i < board.length; i++){             //Check Rows
-			seen = new HashSet<Character>();
-			for (int k = 0; k < board[i].length; k++){ 
-				if (board[i][k] == '.')
+		HashSet<Character> seenRow = new HashSet<Character>();	//Could use an array here but easier to leave from earlier solution. Would it be faster? slightly less memory probably because primitive array not objects
+		boolean[][] seenCol = new boolean[9][9];				//Need space for each column to have each number 
+		boolean[][] seenBox = new boolean[9][9];				//Space for each box to have each number
+		for (int i = 0; i < board.length; i++){					//For every row
+			seenRow = new HashSet<Character>();					//Reset values seen in row
+			for (int k = 0; k < board[i].length; k++){ 			//For every column
+				if (board[i][k] == '.'){							//Blank space go to next 
 					continue;
-				else if (!seen.add(board[i][k])){
+				} else if (!seenRow.add(board[i][k])){			//If seen in this row, invalid
+//					System.out.println("BAD ROW! " + i + " " + k");
+					return false;
+				}
+                if (seenCol[k][board[i][k] - '1'] == false){	//Column k will repeat down the rows, and go to index board[i][k] - 1 (1 stored at 0)
+					seenCol[k][board[i][k] - '1'] = true;		//If it hasnt been seen mark it seen
+				} else if (seenCol[k][board[i][k] - '1'] == true){	//If seen invalid
+//                    System.out.println("BAD COL! " + i + " " + k);
+					return false;
+				}  
+                if (seenBox[(k/3)+(i/3)*3][board[i][k] - '1'] == false){		//Box number adds 1 for every 3 spaces right, and 3 every 3 spaces down. numbered 1 2 3 along top 
+//                    System.out.println("Box #" + ((k/3)+(i/3)*3) + " saw " + board[i][k]);
+					seenBox[(k/3)+(i/3)*3][board[i][k] - '1'] = true;
+				} else if (seenBox[(k/3)+(i/3)*3][board[i][k] - '1'] == true){
+//					System.out.println("BAD BOX! " + i + " " + k");
 					return false;
 				}
 			}
 		}
-		for (int i = 0; i < board.length; i++){             //Check columns
-			seen = new HashSet<Character>();
-			for (int k = 0; k < board[i].length; k++){ 
-				if (board[k][i] == '.')
-					continue;
-				else if (!seen.add(board[k][i])){
-					return false;
-				}
-			}
-		}
-		for (int i = 0; i < board.length; i += 3){			//i is the top corner row
-			for (int k = 0; k < board[i].length; k += 3){	//k is the top corner column
-				seen = new HashSet<Character>();
-				for (int ii = i; ii < i+3; ii++){			//Check the 3x3 box with i and k as the top corner
-					for (int kk = k; kk < k+3; kk++){
-						if (board[ii][kk] == '.')
-							continue;
-						else if (!seen.add(board[ii][kk])){
-							return false;
-						}
-					}
-				}
-			}
-		}
-		return true;
+        return true;										//Made it to end so valid
+		
 	}
 }

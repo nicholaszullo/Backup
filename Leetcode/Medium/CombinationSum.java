@@ -1,6 +1,7 @@
-/**	DFS to find all solutions using backtracking recursion
+/**	DFS to find all solutions using backtracking recursion. 
+ * 		Inital loop is not needed, case vals empty should just start next iteration in backtracking
  * 	Runtime quick
- * 	Memory a decent bit
+ * 	Memory not too much
  */
 import java.util.*;
 
@@ -20,9 +21,9 @@ public class CombinationSum {
 	public static List<List<Integer>> combinationSum(int[] candidates, int target) {
 		ArrayList<List<Integer>> answer = new ArrayList<List<Integer>>();
 		Arrays.sort(candidates);
-		for (int i = 0; i < candidates.length; i++){		//Find all solutions that start with index i
-			recCombinationSum(candidates, target, i, 0, new ArrayList<Integer>(), answer);
-		}
+		
+		recCombinationSum(candidates, target, 0, 0, new ArrayList<Integer>(), answer);
+		
 		return answer;
 	}
 	private static void recCombinationSum(int[] candidates, int target, int index, int sum, List<Integer> vals, List<List<Integer>> answer){
@@ -40,8 +41,6 @@ public class CombinationSum {
 				vals.add(candidates[i]);				//sum+curr is <= target so add it
 				recCombinationSum(candidates, target, i, sum+candidates[i], vals, answer);		//Find all solutions including curr and all after curr
 				vals.remove(vals.size()-1);				//Go back to try other numbers
-				if (vals.size() == 0)					//If back at start, stop and go back to first loop
-					return ;
 			}
 
 		}

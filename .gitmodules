@@ -30,3 +30,4 @@
 [submodule "1520/cs1520-project-0-nicholaszullo"]
 	path = 1520/cs1520-project-0-nicholaszullo
 	url = https://github.com/achpitt1520/cs1520-project-0-nicholaszullo
+	ignore = untracked

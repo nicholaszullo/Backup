@@ -25,6 +25,16 @@ body{
 	text-align: center;
 	font-family: 'Roboto', sans-serif;
 }
+.body a{
+	color: black;
+	text-decoration: none;
+	border: 1px solid black;
+	padding: 1px 10px;
+}
+.body a:hover {
+	background-color: yellow;
+
+}
 
 .allEvents {
 	background-color: antiquewhite;
@@ -32,16 +42,7 @@ body{
 	width: 50%;
 	
 }
-.allEvents a{
-	color: black;
-	text-decoration: none;
-	border: 1px solid black;
-	padding: 1px 10px;
-}
-.allEvents a:hover {
-	background-color: yellow;
 
-}
 
 .allEvents .eachEvent {
 	background-color: bisque;

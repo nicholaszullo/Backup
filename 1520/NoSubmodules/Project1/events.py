@@ -6,7 +6,6 @@ import re		#regular expressions
 import datetime
 """
 	TODO:
-		test safeguards to attending and cancel so only designated users can perform the operations
 		Continue CSS improvements
 """
 app = Flask(__name__);
@@ -34,7 +33,6 @@ def homepage():
 	userEvents = []
 	if g.user:
 		userEvents = User.query.filter_by(user_id=g.user.user_id).first().host_events.filter_by(host=g.user.user_id).all()
-		#print())	#all events user1 attends
 
 	return render_template("home.html", eventList=eventList, User=User, Event=Event, userEvents=userEvents);
 
@@ -90,8 +88,13 @@ def login():
 
 @app.route("/logout")
 def logout():
-	session.pop("user_id", None)		# Remove user from session
-	return render_template("userLogout.html")
+	if g.user:
+		session.pop("user_id", None)		# Remove user from session
+		g.user = None
+		return render_template("userLogout.html")
+	else:
+		flash("Login first!")
+		return redirect(url_for("login"))
 
 @app.route('/create', methods=["GET", "POST"])
 def createEvent():
@@ -124,6 +127,10 @@ def createEvent():
 
 @app.route('/attend/<event_id>')
 def attend(event_id):
+	if not g.user:
+		flash("Must be logged in to attend an event!")
+		return redirect(url_for('login'))
+
 	if g.user.user_id == Event.query.filter_by(event_id=event_id).first().host:
 		flash("Host cannot join event!")
 		return redirect(url_for('homepage'))
@@ -135,12 +142,16 @@ def attend(event_id):
 
 @app.route('/cancel/<event_id>', methods=["POST","GET"])
 def cancel(event_id):
-	if g.user.user_id != Event.query.filter_by(event_id=event_id).first().host:
+	if not g.user:
+		flash("Must be logged in to cancel an event!")
+		return redirect(url_for('login'))
+	event = Event.query.filter_by(event_id=event_id).first()
+	if g.user.user_id != event.host:
 		flash("Only host can cancel an event!")
 		return redirect(url_for('homepage'))
 	if request.method == "POST":
 		if request.form['confirm'] == "CONFIRM":
-			Event.query.filter_by(event_id=event_id).delete()
+			db.session.delete(event)
 			db.session.commit()
 			flash("Confirmed cancel!")
 			return redirect(url_for('homepage'))

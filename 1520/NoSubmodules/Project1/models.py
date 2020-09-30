@@ -11,7 +11,7 @@ class User(db.Model):
 	username = db.Column(db.String(24), nullable=False, unique=True, index=True)	# what are the arguments to String? max length?
 	password_hash = db.Column(db.String(64), nullable=False)
 	host_events = db.relationship("Event", backref="user", lazy="dynamic")	#one host to many events
-	attends = db.relationship("Event", secondary=attending_events, backref=db.backref("users",lazy="dynamic"), lazy="dynamic") 		#can attend many events
+	attends = db.relationship("Event", secondary=attending_events, back_populates="attendees", lazy="dynamic") 		#can attend many events
 
 	def __init__(self, username, password_hash):
 		self.username = username
@@ -28,7 +28,7 @@ class Event(db.Model):
 	time_start = db.Column(db.DateTime, nullable=False)
 	time_end = db.Column(db.DateTime, nullable=False)
 	host = db.Column(db.Integer, db.ForeignKey("users.user_id"))	#add host column to this event
-	attendees = db.relationship("User", secondary=attending_events, backref=db.backref("events",lazy="dynamic"), lazy="dynamic")
+	attendees = db.relationship("User", secondary=attending_events, back_populates="attends", lazy="dynamic")	#event can have many users
 	
 	def __init__(self, title,description,time_start,time_end):
 		self.title = title

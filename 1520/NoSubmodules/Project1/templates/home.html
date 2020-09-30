@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Home Page{% endblock %}
+{% block body %}
+{% if g.user %}
+	<h1 id="welcome">Welcome {{g.user.username}}!</h1>
+{% endif %}
+{% if eventList %}
+<div class="allEvents">
+	<h1>Events</h1>
+	{% for event in eventList %}
+	<div class="eachEvent">
+		<p>{{ event.title }}<p>
+		<p>{{event.description}} </p>
+		<p>start: {{event.time_start}} </p>
+		<p>end: {{event.time_end}} </p>
+		{% set host = User.query.filter_by(user_id=event.host).first() %}
+		<p>Host: {{ host.username }} </p>
+		{% set attendees = Event.query.filter_by(event_id=event.event_id).first().attendees.all() | string() %}
+		<p>Attendees: {% if attendees == "[]" %} No attendees yet. Spread the word about {{event.title}}!
+			{% else %}
+			{{attendees}}
+			{%endif%}
+		</p>
+		{% if g.user %}
+			{% if g.user.user_id != host.user_id and "user " +g.user.username+"," not in attendees %}
+				<a class="attendButton" href="{{url_for('attend', event_id=event.event_id)}}">Attend!</a> <br>
+			{% endif %}
+		{% endif %}
+	</div>
+	{% endfor %}
+	<div class="userEvents">
+		<br>
+		{% if g.user %}
+			{% if userEvents %}
+				{{ g.user.username }}'s events:
+				{% for event in userEvents %}
+					{{ event.title }} <br> <a class="cancelButton" href="{{ url_for('cancel', event_id = event.event_id) }}">Cancel Event</a> <br>
+				{% endfor %}
+			{% else %}
+				Not hosting any events. <br><a href="{{ url_for('createEvent') }}">Create Event</a> <br>
+			{% endif %}
+		{% endif %}
+		<br>
+	</div>
+	<br>
+	<div class="userAttends">
+		<br>
+		{% if g.user %}
+		Attending events: 
+			{% if User.query.filter_by(user_id=g.user.user_id).first().attends.all() == [] %}
+				 None! Click attend above to register for an event.
+			{% else %}
+				{{User.query.filter_by(user_id=g.user.user_id).first().attends.all() }}
+			{% endif %}
+		{% endif %}
+		<br>
+	</div>
+</div>
+{% endif %}
+
+{% endblock %}

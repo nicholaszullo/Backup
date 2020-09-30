@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Cancel Event{% endblock %}
+{% block body %}
+<form class="confirmCancel" action="" method="POST">
+	<p>Type CONFIRM to confirm: <input type="text" name="confirm" maxlength="10"></p>
+	<input type="submit" name="submit" value="confirm!">
+</form>
+
+{% endblock %}

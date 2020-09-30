@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Creator! {% endblock %}
+{% block body %}
+{% if error %}<div class="error">Error {{ error }}</div>{% endif %}
+<form action="" method="POST">
+	<p>Title:<input type="text" name="title" maxlength="90"></p>
+	<p>Description<textarea name="description">Enter the description...</textarea></p>
+	<p>Enter the start date and time: (mm/dd/yyyy 00:00 (24 hour time!))<input type="text" name="start" maxlength="32"></p>
+	<p>Enter the end date and time:<input type="text" name="end" maxlength="32"></p>
+	<input type="submit" name="submit" value="Create!">
+</form>
+{% endblock %}

@@ -4,10 +4,7 @@ from models import db, User, Event		#the database objects
 from werkzeug.security import generate_password_hash, check_password_hash		#secure passwords
 import re		#regular expressions
 import datetime
-"""
-	TODO:
-		Continue CSS improvements
-"""
+
 app = Flask(__name__);
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(app.root_path, "events.db")
 app.config.from_object(__name__)			#why are these 2 needed?
@@ -29,10 +26,10 @@ def before_request():
 
 @app.route("/")
 def homepage():
-	eventList = Event.query.all()
+	eventList = Event.query.order_by(Event.time_start).all()
 	userEvents = []
 	if g.user:
-		userEvents = User.query.filter_by(user_id=g.user.user_id).first().host_events.filter_by(host=g.user.user_id).all()
+		userEvents = User.query.filter_by(user_id=g.user.user_id).first().host_events.filter_by(host=g.user.user_id).order_by(Event.time_start).all()
 
 	return render_template("home.html", eventList=eventList, User=User, Event=Event, userEvents=userEvents);
 
@@ -130,10 +127,18 @@ def attend(event_id):
 	if not g.user:
 		flash("Must be logged in to attend an event!")
 		return redirect(url_for('login'))
-
+	if not Event.query.filter_by(event_id=event_id).first():
+		flash("Event does not exist!")
+		return redirect(url_for('homepage'))
+		
 	if g.user.user_id == Event.query.filter_by(event_id=event_id).first().host:
 		flash("Host cannot join event!")
 		return redirect(url_for('homepage'))
+
+	if Event.query.filter_by(event_id=event_id).first().attendees.filter_by(user_id=g.user.user_id).first():
+		if g.user.user_id == Event.query.filter_by(event_id=event_id).first().attendees.filter_by(user_id=g.user.user_id).first().user_id:
+			flash("Already joined Event!")
+			return redirect(url_for('homepage'))
 
 	event = Event.query.filter_by(event_id=event_id).first()
 	g.user.attends.append(event)
@@ -146,17 +151,22 @@ def cancel(event_id):
 		flash("Must be logged in to cancel an event!")
 		return redirect(url_for('login'))
 	event = Event.query.filter_by(event_id=event_id).first()
-	if g.user.user_id != event.host:
-		flash("Only host can cancel an event!")
-		return redirect(url_for('homepage'))
-	if request.method == "POST":
-		if request.form['confirm'] == "CONFIRM":
-			db.session.delete(event)
-			db.session.commit()
-			flash("Confirmed cancel!")
+	if event:
+		if g.user.user_id != event.host:
+			flash("Only host can cancel an event!")
 			return redirect(url_for('homepage'))
-		else:
-			flash("Unable to confirm!")
+		if request.method == "POST":
+			if request.form['confirm'] == "CONFIRM":
+				db.session.delete(event)
+				db.session.commit()
+				flash("Confirmed cancel!")
+				return redirect(url_for('homepage'))
+			else:
+				flash("Unable to confirm!")
+				return render_template("eventCancel.html")
+	else:
+		flash("Event does not exist!")
+		return redirect(url_for('homepage'))
 
 	return render_template("eventCancel.html")
 

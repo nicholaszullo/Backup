@@ -22,7 +22,7 @@ public class RemoveDuplicatesList{
 			if (curr.next != null && curr.val == curr.next.val){
 				curr.next = curr.next.next;
 			} else {
-				curr = curr.next
+				curr = curr.next;
 			}
 		}
 		

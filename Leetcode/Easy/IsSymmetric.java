@@ -9,7 +9,7 @@ public class IsSymmetric {
           return true;
         } else if (currp == null || currq == null){
             return false;
-        } else if ((currp != null && currq != null) && currp.val != currq.val){
+        } else if (currp.val != currq.val){
             return false;
         } else {
             return dfs(currp.left,currq.right) && dfs(currp.right, currq.left); 

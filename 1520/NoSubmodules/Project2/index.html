@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Bingo!</title>
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<meta charset="ascii"/>
+</head>
+<body>
+	<div id="callbox">
+		<h1 id="calledNum"></h1>
+	</div>
+	<div id="board" class="board">
+	</div>
+	<div class="buttonHolder">
+		<div id="newGameRandom" class="button">
+			<p>New Game Random</p>
+		</div>
+		<div id="newGameSpecified" class="button">
+			<p>New Game Specified</p>
+		</div>
+		<div id="iWon" class="button"style="display: none;">
+			<p>I Won</p>
+		</div>
+		<div id="iLost" class="button"style="display: none;">
+			<p>I Lost</p>
+		</div>
+	</div>
+	<div id="recordHolder" class="record">
+		<div id="wins"><p>Number wins: </p> <p id="changeWins">0</p></div>
+		<div id="losses"><p>Number losses: </p> <p id="changeLosses">0</p></div>
+	</div>
+	<script src="script.js"></script> 
+</body>
+
+</html>

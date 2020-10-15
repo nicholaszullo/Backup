@@ -1,8 +1,3 @@
-/**\
- * 	TODO:
- * 	Remove card from dom when game ends?
- * 	CSS Improvements
- */
 var bingo = false;
 var storage = window.localStorage;
 let wins = document.getElementById("changeWins");
@@ -48,6 +43,16 @@ function createBoard(){
 	}
 }
 
+function deleteBoard(){
+	var board = document.getElementById("board");
+	var cells = document.getElementsByClassName("cell");
+	let length = cells.length;
+	for (i = 0; i < length; i++){
+		board.removeChild(cells[0]);
+	}
+	document.getElementById("calledNum").style.display = "none";
+}
+
 function clicked(cell){
 	if (cell.style.backgroundColor == "red"){
 		cell.style.backgroundColor = "azure"
@@ -89,6 +94,7 @@ function newNums(){
 	if (document.getElementsByClassName("cell").length == 0){
 		createBoard();
 	}
+	document.getElementById("calledNum").style.display = "inherit"
 	for (i = 0; i < 5; i++){				//1st row is letters so skip
 		var prev = new Array(5);
 		
@@ -146,7 +152,6 @@ newGame.addEventListener("click", function(){
 	iLost.style.display = "inherit";
 }, false);
 
-//B(5,3,2,1,11)I(16,23,30,19,22)N(34,35,f,40,45)G(46,47,50,55,60)O(61,66,68,72,75) copy and paste holder
 newGameSpecified.addEventListener("click", function(){
 	var userBoard = prompt("Enter a board string: No  duplicate numbers allowed! Numbers in B should be from 1-15, I:16-30, N:31-45, G: 46-60, O: 61-75", 
 	"B(x,x,x,x,x)I(x,x,x,x,x)N(x,x,f,x,x)G(x,x,x,x,x)O(x,x,x,x,x)");
@@ -159,7 +164,7 @@ newGameSpecified.addEventListener("click", function(){
 		createBoard();
 	}
 	dupes = new Set();
-	
+	document.getElementById("calledNum").style.display = "inherit";
 	for (i = 0; i < 5; i++){				
 		for (j = 1; j < 6; j++){
 			if (j == 3 && i == 2)			//Skip changing freespace
@@ -218,7 +223,7 @@ iWon.addEventListener("click", function(){
 		let val = document.getElementById("changeWins");
 		storage.setItem("wins", parseInt(val.innerText)+1);
 		val.innerText = parseInt(val.innerText)+1;
-
+		deleteBoard();
 		newGame.style.display = "inherit";
 		newGameSpecified.style.display = "inherit";
 		iWon.style.display = "none";
@@ -236,6 +241,7 @@ iLost.addEventListener("click", function(){
 	let losses = document.getElementById("changeLosses");
 	storage.setItem("losses", parseInt(losses.innerText) +1);
 	losses.innerText = parseInt(losses.innerText) +1;
+	deleteBoard();
 	newGame.style.display = "inherit";
 	newGameSpecified.style.display = "inherit";
 	iWon.style.display = "none";

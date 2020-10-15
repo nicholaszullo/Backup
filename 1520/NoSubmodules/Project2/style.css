@@ -2,6 +2,9 @@
 	font-family: 'Roboto', sans-serif;
 
 }
+body{
+	background-color: bisque;
+}
 
 #board{
 	align-items: center;
@@ -27,4 +30,20 @@
 	cursor: pointer;
 	border: 1px solid black;
 	padding: 3px 10px;
+	background-color: yellow;
+}
+.button:hover{
+	background-color: orange;
+	transition: 300ms;
+}
+
+#recordHolder {
+	display: flex;
+}
+
+.record {
+	text-align: center;
+	border: 1px solid black;
+	padding: 3px 10px;
+	background-color: cornsilk;
 }

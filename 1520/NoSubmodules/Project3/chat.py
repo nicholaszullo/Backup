@@ -9,13 +9,6 @@ users = {}
 chatrooms = {}
 numRooms = 0
 
-""" TODO:
-		if room is deleted on new message check, display option to return home
-		add checks to all urls to ensure proper access
-		css improvements
-"""
-
-
 class User:
 	def __init__(self, username, password,room_num):
 		self.username = username
@@ -177,11 +170,11 @@ def returnChats():
 	if g.user.room_num == -1:
 		flash("Not in room anymore")
 		return "Forbidden", 403
-	if int(g.user.room_num) not in chatrooms:		#NOT WORKING
+	if int(g.user.room_num) not in chatrooms:
 		flash("ROOM CLOSED BY HOST :(")
 		return "Forbidden", 403
 	
-	return json.dumps(chatrooms[int(g.user.room_num)].data[request.get_json()["numberchats"]:])
+	return json.dumps(chatrooms[int(g.user.room_num)].data[request.get_json()["numberchats"]:])     #Slice the chat history and only return the new chats
 
 if __name__ == "__main__":
 	app.run()

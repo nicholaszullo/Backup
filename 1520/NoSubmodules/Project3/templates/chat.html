@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Chat Room {{ room.number}}
+{% endblock %}
+{% block body %}
+<h1>Welcome To Room {{room.number}}</h1>
+<div class="allChats" id="allChats">
+<h2>Chat History</h2>
+</div>
+<div id ="newChatWindow">
+<h2>Send new chat!</h2>
+<form name="newChat">
+	<input type="text" id="newChatContent" name="newChatContent" value="">
+	<input type="button" id="submitChat" value="Send!">
+</form>
+</div>
+<div id="bottom"></div>
+<script type="text/javascript" src="{{ url_for('static', filename='chat.js') }}"></script>
+{%endblock%}

@@ -1,0 +1,6 @@
+Use this file for any notes you would like to pass onto the grader.
+Sending a new chat requires pressing the send button. Pressing enter will use a GET and is not supported
+Available rooms update on refresh. This means if Chrome and Firefox are both at home, they will need to refresh to see room created by other browser.
+Must logout before ending flask or user wont be removed from session, and no persisent data so everything will be 503 error on next run
+Most testing was done with Firefox, Chrome is much slower and kept telling me localhost was stealing my passwords
+Sorry on the last project I forgot to do any testing with Chrome and overlapped some buttons. Was perfectly aligned on Firefox. Should be good this time

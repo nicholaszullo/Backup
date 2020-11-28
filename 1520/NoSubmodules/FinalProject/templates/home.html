@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block body %}
+<div id="welcome-banner">
+{% if g.user %}
+	<h1 id="welcome">Welcome {{g.user.username}}!</h1>
+{% else %}
+	<h1>Login to enable functionality</h1>
+{% endif %}
+</div>
+<button class="btn" id="update">Update Data!</button>
+
+<div id="cat-block">
+	New Category:
+	<p>Name: <input type="text" id="cat-new" name="newCat" value=""></p>
+	<p>Limit: <input type="text" id="cat-limit" name="newCat" value=""></p>
+	<input type="button" class="btn" id="cat-send" value="Send!">
+</div>
+<div id="purchase-block">
+	New Purchase:
+	<p>Amount <input type="text" id="purchase-amount" name="amount"></p>
+	<p>Description <input type="textarea" id="purchase-description" name="description"></p>
+	<p>Date: (mm/dd/yyyy 00:00 (24 hour time!))<input type="text" id="purchase-date" name="date"></p>
+	<p>Category: (CaSE senSiTivE!)<input type="text" id="purchase-cat" name="cat"></p>
+	<input type="submit" name="submit" class="btn" id="purchase-send" value="Record Purchase!">
+</div>
+<div id="cat-list">
+	<h2>Budget categories</h2>
+</div>
+
+<script type="text/javascript" src="{{ url_for('static', filename='home.js') }}"></script>
+{% endblock %}

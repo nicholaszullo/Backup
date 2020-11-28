@@ -42,3 +42,6 @@
 [submodule "1520/cs1520-project-3-nicholaszullo"]
 	path = 1520/cs1520-project-3-nicholaszullo
 	url = https://github.com/achpitt1520/cs1520-project-3-nicholaszullo.git
+[submodule "1520/cs1520-final-project-nicholaszullo"]
+	path = 1520/cs1520-final-project-nicholaszullo
+	url = https://github.com/achpitt1520/cs1520-final-project-nicholaszullo.git

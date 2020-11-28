@@ -1,0 +1,3 @@
+Use this file for any notes you would like to pass onto the grader.
+
+Returning a 100 code when there is no update is silent in firefox console but reports an error in chrome. I tried to use a 302 no change but that caused Firefox to use the cached response which JS interpreted as new data and caused duplicates.

@@ -25,11 +25,9 @@
 [submodule "1520/cs1520-project-0-nicholaszullo"]
 	path = 1520/cs1520-project-0-nicholaszullo
 	url = https://github.com/achpitt1520/cs1520-project-0-nicholaszullo
-	ignore = dirty
 [submodule "1520/cs1520-project-1-nicholaszullo"]
 	path = 1520/cs1520-project-1-nicholaszullo
 	url = https://github.com/achpitt1520/cs1520-project-1-nicholaszullo.git
-	ignore = dirty
 [submodule "cs1520-project-1-nicholaszullo"]
 	path = cs1520-project-1-nicholaszullo
 	url = https://github.com/achpitt1520/cs1520-project-1-nicholaszullo.git

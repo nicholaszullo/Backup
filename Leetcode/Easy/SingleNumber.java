@@ -1,3 +1,5 @@
+import java.util.HashMap;
+
 public class SingleNumber {
     public int singleNumber(int[] nums) {
         HashMap<Integer,Boolean> seen = new HashMap<Integer,Boolean>();

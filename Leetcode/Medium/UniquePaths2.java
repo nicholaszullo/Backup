@@ -27,7 +27,6 @@ public class UniquePaths2 {
 				}
 			}
 		}
-		
 		return dp[obstacleGrid.length-1][obstacleGrid[obstacleGrid.length-1].length-1];		//Answer is bottom right corner
 	}
 }

@@ -43,3 +43,25 @@
 [submodule "1520/cs1520-final-project-nicholaszullo"]
 	path = 1520/cs1520-final-project-nicholaszullo
 	url = https://github.com/achpitt1520/cs1520-final-project-nicholaszullo.git
+[submodule "1632/Exercises/0"]
+	path = 1632/Exercises/0
+	url = https://github.com/nicholaszullo/Exercise-0
+[submodule "1632/Exercises/1"]
+	path = 1632/Exercises/1
+	url = https://github.com/nicholaszullo/Exercise-1
+[submodule "1632/Exercises/2"]
+	path = 1632/Exercises/2
+	url = https://github.com/nicholaszullo/Exercise-2
+[submodule "1632/Deliverables/1"]
+	path = 1632/Deliverables/1
+	url = https://github.com/nicholaszullo/Deliverable-1
+[submodule "1632/Deliverables/2"]
+	path = 1632/Deliverables/2
+	url = https://github.com/nicholaszullo/Deliverable-2
+
+
+
+
+[submodule "1632/Exercise/0"]
+	path = 1632/Exercise/0
+	url = https://github.com/nicholaszullo/Exercise-0

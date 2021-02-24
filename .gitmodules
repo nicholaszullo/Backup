@@ -58,10 +58,6 @@
 [submodule "1632/Deliverables/2"]
 	path = 1632/Deliverables/2
 	url = https://github.com/nicholaszullo/Deliverable-2
-
-
-
-
-[submodule "1632/Exercise/0"]
-	path = 1632/Exercise/0
-	url = https://github.com/nicholaszullo/Exercise-0
+[submodule "1632/Exercises/Supplement2"]
+	path = 1632/Exercises/Supplement2
+	url = https://github.com/nicholaszullo/Supplemental-2

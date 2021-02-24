@@ -8,5 +8,5 @@ Backup of programs written on laptop
 - CS1501 [Algorithm Implementation](https://github.com/nicholaszullo/Backup/tree/master/1501)
 - CS1520 [Web Applications](https://github.com/nicholaszullo/Backup/tree/master/1520)
 - CS1550 [Intro to Operating Systems](https://github.com/nicholaszullo/Backup/tree/master/1550)
-- CS1632 [Software Quality Assurance](https://github.com/nicholaszullo/Backup/tree/master/1632)
+- CS1632 [Software Quality Assurance](https://github.com/nicholaszullo/Backup/tree/master/1632) Note: Submodule free code coming after the semester
 - CS1678 [Intro to Deep Learning](https://github.com/nicholaszullo/Backup/tree/master/1678)

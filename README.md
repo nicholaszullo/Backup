@@ -9,6 +9,6 @@ Backup of coursework completed during undergrad
 - CS1520 [Web Applications](https://github.com/nicholaszullo/Backup/tree/master/1520)
 - CS1550 [Intro to Operating Systems](https://github.com/nicholaszullo/Backup/tree/master/1550)
 - CS1632 [Software Quality Assurance](https://github.com/nicholaszullo/Backup/tree/master/1632)
-- CS1645 [Intro to High Performance Computing]((https://github.com/nicholaszullo/Backup/tree/master/1645)
-- CS1675 [Intro to Machine Learning]((https://github.com/nicholaszullo/Backup/tree/master/1675)
+- CS1645 [Intro to High Performance Computing](https://github.com/nicholaszullo/Backup/tree/master/1645)
+- CS1675 [Intro to Machine Learning](https://github.com/nicholaszullo/Backup/tree/master/1675)
 - CS1678 [Intro to Deep Learning](https://github.com/nicholaszullo/Backup/tree/master/1678)

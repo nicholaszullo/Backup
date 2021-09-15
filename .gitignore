@@ -19,3 +19,7 @@ Eclipse
 1678/HW3/pacs_dataset
 
 
+*.Rproj
+.Rproj.user
+.RData
+.Rhistory

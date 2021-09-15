@@ -57,6 +57,7 @@ class IMDBReviewDataset(Dataset):
       counter.update(review)
 
     vocab = counter.most_common(self.vocab_max_size - 4)
+    print(vocab)
     if self.vocab_min_count is not None:
       vocab_tokens = [w for (w, c) in vocab if c >= self.vocab_min_count]
     else:

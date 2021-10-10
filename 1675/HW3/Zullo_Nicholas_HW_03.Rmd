@@ -1,0 +1,815 @@
+---
+title: "CS 1675 Fall 2021 Homework: 03"
+subtitle: "Assigned September 16, 2021; Due: September 23, 2021"
+author: "Nicholas Zullo"
+date: "Submission time: September 23, 2021 at 3:00PM EST"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Overview
+
+In the previous assignment, you calculated important binary classification performance metrics by hand. You will now use existing functions from the `caret` and `yardstick` packages to training and assess the performance of multiple binary classifiers. The resampling and model evaluation will be managed by the `caret` package. You will consider several performance metrics and study what those metrics tell you about the model behavior. You will use functions from the `yardstick` package to help visualize the ROC curve. Please download and install `yardstick` before starting the assignment. You can do so directly or by downloading and installing `tidymodels`.  
+
+This assignment also gets you started with with likelihood functions. Specifically, you will work with the Bernoulli likelihood of a binary outcome. You will visualize the likelihood with respect to the unknown parameter we are interested in learning from data.  
+
+**IMPORTANT**: code chunks are created for you. Each code chunk has `eval=FALSE` set in the chunk options. You **MUST** change it to be `eval=TRUE` in order for the code chunks to be evaluated when rendering the document.  
+
+
+## Load packages
+
+The tidyverse is loaded for you in the code chunk below.  
+
+```{r, load_tidyverse_pkg}
+library(tidyverse)
+library(tidymodels)
+```
+
+## Problem 01
+
+The code chunk below reads in the data you will work with in the first two problems. The data consists of 4 inputs, `x1` through `x4`, and a binary outcome, `y`. The binary outcome is converted to a factor for you with the appropriate level order for modeling with `caret`.  
+
+```{r, read_hw_data_set}
+hw03_url <- 'https://raw.githubusercontent.com/jyurko/CS_1675_Fall_2021/main/HW/03/hw03_binary_data.csv'
+
+df <- readr::read_csv(hw03_url, col_names = TRUE)
+
+df <- df %>% 
+  mutate(y = factor(y, levels = c("event", "non_event")))
+```
+
+A glimpse of the data are provided to you below.  
+
+```{r, show_hw_data_glimpse}
+#df <- mutate(df, y_int = ifelse(y=="event", 1, 0))
+df %>% glimpse()
+```
+
+### 1a)
+
+**Are the levels of the binary outcome, `y`, balanced?**  
+
+#### SOLUTION
+```{r, 1a}
+mean(df$y=="event")
+```
+The levels of the dataset are balanced. 48% of the data belongs to "event", which is well within the perfered range. 
+
+### 1b)
+
+Although it is best to explore the data in greater detail when we start a data analysis project, we will jump straight to modeling in this assignment.  
+
+Download and install `yardstick` if you have not done so already.  
+
+**Load in the `caret` package and the `yardstick` packages below. Use a separate code chunk for each package.**  
+
+#### SOLUTION
+```{r,1b_caret}
+library(caret)
+```
+
+```{r, 1b_yard}
+library(yardstick)
+```
+
+### 1c)
+
+Just as with regression problems, we must first specify the resampling scheme and primary performance metric when we use `caret` for classification problems. All students will use the same primary performance metric in this assignment. We will begin by focusing on the Accuracy. That said, you are free to decide the kind of resampling scheme you wish to use.  
+
+The resampling scheme is controlled by the `trainControl()` function, just as it was with regression problems. You must specify the arguments to the `trainControl()` function accordingly in this problem.  
+
+
+**Specify the resampling scheme you wish to use and assign the result to the `ctrl_acc` object. Specify the primary performance metric to be Accuracy by assigning `'Accuracy'` to the `metric_acc` argument.**  
+
+```{r, solution_01c, eval=TRUE}
+ctrl_acc <- trainControl(method="cv", number=5)
+
+metric_acc <- "Accuracy"
+```
+
+
+### 1d)
+
+You are going to train 8 binary classifiers in this problem. The different models will use different features derived from the 4 inputs. The 8 models must have the following features:  
+
+* model 1: linear additive features all inputs  
+* model 2: linear features and quadratic features all inputs  
+* model 3: linear features and quadratic features just inputs 1 and 2  
+* model 4: linear features and quadratic features just inputs 1 and 3  
+* model 5: linear features and quadratic features just inputs 1 and 4  
+* model 6: linear features and quadratic features just inputs 2 and 3  
+* model 7: linear features and quadratic features just inputs 2 and 4  
+* model 8: linear features and quadratic features just inputs 3 and 4  
+
+Model 1 is the conventional "linear method" for binary classification. All other models have linear and quadratic terms to allow capturing non-linear relationships with the event probability (just how that works will be discussed later in the semester). Model 2 creates the features from all four inputs. The remaining 6 models use the combinations of just two of the inputs. This approach is trying to identify the best possible set of inputs to use to model the binary outcome in a step-wise like fashion.  
+
+**You must complete the 8 code chunks below. Use the formula interface to create the features in the model, analogous to the approach used in the previous assignment. You must specify the `method` argument in the `train()` function to be `"glm"`. You must specify the remaining arguments to `train()` accordingly.**  
+
+**The variable names and comments within the code chunks specify which model you are working with.**  
+
+*NOTE*: The models are trained in separate code chunks that way you can run each model separately from the others.  
+
+#### SOLUTION
+
+```{r, solution_01d_01, eval=TRUE}
+### model 1
+set.seed(2021)
+mod_1_acc <- train(form=y ~ x1 + x2 + x3 + x4, data=df, method="glm", metric=metric_acc, trControl=ctrl_acc)
+```
+
+
+```{r, solution_01d_02, eval=TRUE}
+### model 2
+set.seed(2021)
+mod_2_acc <- train(y ~ x1 + x2 + x3 + x4 + I(x1^2) + I(x2^2) + I(x3^2) + I(x4^2), data=df, method="glm", metric=metric_acc, trControl=ctrl_acc)
+```
+
+```{r, solution_01d_03, eval=TRUE}
+### model 3
+set.seed(2021)
+mod_3_acc <- train(y ~ x1 + x2 + I(x1^2) + I(x2^2), data=df, method="glm", metric=metric_acc, trControl=ctrl_acc)
+```
+
+
+```{r, solution_01d_04, eval=TRUE}
+### model 4
+set.seed(2021)
+mod_4_acc <- train(y ~ x1 + x3 + I(x1^2) + I(x3^2), data=df, method="glm", metric=metric_acc, trControl=ctrl_acc)
+```
+
+
+```{r, solution_01d_05, eval=TRUE}
+### model 5
+set.seed(2021)
+mod_5_acc <- train(y ~ x1 + x4 + I(x1^2) + I(x4^2), data=df, method="glm", metric=metric_acc, trControl=ctrl_acc)
+```
+
+
+```{r, solution_01d_06, eval=TRUE}
+### model 6
+set.seed(2021)
+mod_6_acc <- train(y ~ x2 + x3 + I(x2^2) + I(x3^2), data=df, method="glm", metric=metric_acc, trControl=ctrl_acc)
+```
+
+
+```{r, solution_01d_07, eval=TRUE}
+### model 7
+set.seed(2021)
+mod_7_acc <- train(y ~ x2 + x4 + I(x2^2) + I(x4^2), data=df, method="glm", metric=metric_acc, trControl=ctrl_acc)
+```
+
+
+```{r, solution_01d_08, eval=TRUE}
+### model 8
+set.seed(2021)
+mod_8_acc <- train(y ~ x3 + x4 + I(x3^2) + I(x4^2), data=df, method="glm", metric=metric_acc, trControl=ctrl_acc)
+```
+
+
+### 1e)
+
+You will now compile all resample results together and compare the models based on their Accuracy.  
+
+**Complete the first code chunk below which assigns the models to the appropriate field within the `resamples()` function.**  
+
+**Then use the `summary()` function to summarize the Accuracy across the resamples and visualize the resample averaged performance with the `dotplot()` function from `caret`. In the function calls to both `summary()` and `dotplot()`, set the `metric` argument equal to `'Accuracy'`.**  
+
+**Which model is the best based on Accuracy? Are you confident it's the best?**  
+
+*HINT*: The field names within the list contained in the `resamples()` call correspond to the model object you should use.  
+
+#### SOLUTION
+
+```{r, solution_01e_01, eval=TRUE}
+acc_results <- resamples(list(mod_1 = mod_1_acc,
+                              mod_2 = mod_2_acc,
+                              mod_3 = mod_3_acc,
+                              mod_4 = mod_4_acc,
+                              mod_5 = mod_5_acc,
+                              mod_6 = mod_6_acc,
+                              mod_7 = mod_7_acc,
+                              mod_8 = mod_8_acc))
+```
+
+
+Summarize the results across the resamples.  
+
+```{r, solution_01e_02}
+acc_results %>% summary(metric=metric_acc)
+```
+
+
+Visualize the resample averaged Accuracy per model.  
+
+```{r, solution_01e_03}
+dotplot(acc_results, metric=metric_acc)
+```
+
+
+#### Which model is the best?  
+Model 2 looks to be the best. It has the lowest variance and still a high accuracy. This is expected because using more features as input will often improve predictions
+
+### 1f)
+
+Next, you will consider how a model was correct and how a model was wrong via the confusion matrix. You are allowed to use the `confusionMatrix()` function from the `caret` package in this assignment to create the confusion matrix. A `caret` model object can be passed in as the argument to the `confusionMatrix()` function. The function will then calculate the average confusion matrix across all resample test-sets. The resulting confusion matrix is displayed with percentages instead of counts, as shown in the lecture slides. The interpretations however are the same.  
+
+**Use the `confusionMatrix()` function to display the confusion matrix for the top two and worst two models according to Accuracy. How do the False-Positive and False-Negative behavior compare between these four models?**  
+
+#### SOLUTION
+### Top 2 Models
+```{r, solution_1f_top1}
+confusionMatrix(mod_2_acc)
+```
+
+```{r,solution_1f_top2}
+confusionMatrix(mod_3_acc)
+```
+### Bottom 2
+```{r, solution_1f_bottom1}
+confusionMatrix(mod_8_acc)
+```
+
+```{r, solution_1f_bottom2}
+confusionMatrix(mod_4_acc)
+```
+The FP and FN behavior is similar between the best 2 models, and also similar between the bottom 2 models. The bottom 2 models have a very high rate of false predictions. Almost the same number of False Negatives and True Negatives exist in the bottom model. 
+
+
+## Problem 02
+
+Now that you have compared the models based on Accuracy, it is time to consider another performance metric. The Accuracy is calculated using a single threshold value. You will now examine the model performance across all possible thresholds by studying the ROC curve.  
+
+### 2a)
+
+You will ultimately visually compare the ROC curves for the different models. Unfortunately with `caret`, we need to make several changes to the `trainControl()` function in order to support such comparisons. The code chunk below is started for you by including the necessary arguments you will need to visualize the ROC curves later.  
+
+**You must complete the code chunk by specifying the same resampling scheme you used in Problem 1c). You must also specify the primary performance metric as `'ROC'`. That is how `caret` knows it must calculate the Area Under the Curve (AUC) for the ROC curve.**  
+
+#### SOLUTION
+
+```{r, solution_02a, eval=TRUE}
+ctrl_roc <- trainControl(method="cv", number= 5,
+                         summaryFunction = twoClassSummary,
+                         classProbs = TRUE,
+                         savePredictions = TRUE)
+
+metric_roc <- "ROC"
+```
+
+### 2b)
+
+You will retrain the same set of 8 models that you trained in Problem 1d), but this time using the ROC AUC as the primary performance metric.  
+
+**Complete the code chunks below so that you train the 8 models again, but this time focusing on the ROC AUC. The object name and comments within the code chunks specify the model you should use.**  
+
+#### SOLUTION
+
+
+```{r, solution_02b_01, eval=TRUE}
+### model 1
+set.seed(2021)
+mod_1_roc <- train(form=y ~ x1 + x2 + x3 + x4, data=df, method="glm", metric=metric_roc, trControl=ctrl_roc)
+```
+
+
+```{r, solution_02b_02, eval=TRUE}
+### model 2
+set.seed(2021)
+mod_2_roc <- train(y ~ x1 + x2 + x3 + x4 + I(x1^2) + I(x2^2) + I(x3^2) + I(x4^2), data=df, method="glm", metric=metric_roc, trControl=ctrl_roc)
+```
+
+```{r, solution_02b_03, eval=TRUE}
+### model 3
+set.seed(2021)
+mod_3_roc <- train(y ~ x1 + x2 + I(x1^2) + I(x2^2), data=df, method="glm", metric=metric_roc, trControl=ctrl_roc)
+```
+
+
+```{r, solution_02b_04, eval=TRUE}
+### model 4
+set.seed(2021)
+mod_4_roc <- train(y ~ x1 + x3 + I(x1^2) + I(x3^2), data=df, method="glm", metric=metric_roc, trControl=ctrl_roc)
+```
+
+
+```{r, solution_02b_05, eval=TRUE}
+### model 5
+set.seed(2021)
+mod_5_roc <- train(y ~ x1 + x4 + I(x1^2) + I(x4^2), data=df, method="glm", metric=metric_roc, trControl=ctrl_roc)
+```
+
+
+```{r, solution_02b_06, eval=TRUE}
+### model 6
+set.seed(2021)
+mod_6_roc <- train(y ~ x2 + x3 + I(x2^2) + I(x3^2), data=df, method="glm", metric=metric_roc, trControl=ctrl_roc)
+```
+
+
+```{r, solution_02b_07, eval=TRUE}
+### model 7
+set.seed(2021)
+mod_7_roc <- train(y ~ x2 + x4 + I(x2^2) + I(x4^2), data=df, method="glm", metric=metric_roc, trControl=ctrl_roc)
+```
+
+
+```{r, solution_02b_08, eval=TRUE}
+### model 8
+set.seed(2021)
+mod_8_roc <- train(y ~ x3 + x4 + I(x3^2) + I(x4^2), data=df, method="glm", metric=metric_roc, trControl=ctrl_roc)
+```
+
+
+### 2c)
+
+You will now compile all resample results together and compare the models based on their area under the ROC curve.  
+
+**Complete the first code chunk below which assigns the models to the appropriate field within the `resamples()` function.**  
+
+**Then use the `summary()` function to summarize the ROC AUC across the resamples and visualize the resample averaged performance with the `dotplot()` function from `caret`. In the function calls to both `summary()` and `dotplot()`, set the `metric` argument equal to `'ROC'`.**  
+
+**Which model is the best based on ROC AUC? Are you confident it's the best?**  
+
+*HINT*: The field names within the list contained in the `resamples()` call correspond to the model object you should use.  
+
+#### SOLUTION
+
+```{r, solution_02c_01, eval=TRUE}
+roc_results <- resamples(list(mod_1 = mod_1_roc,
+                              mod_2 = mod_2_roc,
+                              mod_3 = mod_3_roc,
+                              mod_4 = mod_4_roc,
+                              mod_5 = mod_5_roc,
+                              mod_6 = mod_6_roc,
+                              mod_7 = mod_7_roc,
+                              mod_8 = mod_8_roc))
+```
+
+
+Summarize the results across the resamples.  
+
+```{r, solution_02c_02}
+roc_results %>% summary(metric=metric_roc)
+```
+
+
+Visualize the resample averaged ROC AUC per model.  
+
+```{r, solution_02c_03}
+dotplot(roc_results, metric=metric_roc)
+```
+
+
+Which model is the best?  
+Using this metric, model 3 looks to be the best. It has reduced its variance displayed in the accuracy metric, and retains its best average score.
+
+### 2d)
+
+By default, two other metrics are calculated by `caret` when we use the ROC AUC as the primary performance metric. Unlike ROC AUC, these two metrics are calculated with the default threshold. `caret` labels the the Sensitivity as the `Sens` metric and the Specificity as the `Spec` metric.  
+
+**Use the `summary()` and `dotplot()` functions again, but do not specify a metric. Just provide the `roc_results` as the input argument to the functions.**  
+
+**Which model has the highest True-Positive Rate at the default threshold? Which model has the lowest False-Positive Rate at the default threshold?**  
+
+#### SOLUTION
+
+```{r, solution_2d_01}
+roc_results %>% summary()
+```
+```{r, solution_2d_02}
+dotplot(roc_results)
+```
+The highest TPR is mod_2 on average. The lowest FPR is model 7 (highest spec == lowest FPR). 
+
+### 2e)
+
+In order to visualize the ROC curve we need to understand how the resample hold-out test predictions are stored within the `caret` model objects. By default, hold-out test set predictions are not retained, in order to conserve memory. However, the `ctrl_roc` object set `savePredictions = TRUE` which overrides the default behavior and stores each resample test-set predictions.  
+
+The predictions are contained with the `$pred` field of the `caret` model object. The code chunk below displays the first few rows of the predictions for the `mod_1_roc` result for you. Note that the code chunk below is not evaluated by default. When you execute the code chunk below, you will see 7 columns. The column `obs` is the observed outcome and the column `event` is the predicted probability of the `event`. The `pred` column is the model classified outcome based on the default threshold of 50%. The `rowIndex` is the row from the original data set and serves to identify the row correctly. The `Resample` column tells us which resample fold the test point was associated with.  
+
+```{r, show_results_2e, eval=TRUE}
+mod_1_roc$pred %>% tibble::as_tibble()
+```
+
+The ROC curve is calculated by comparing the model predicted probability to all possible thresholds to create many different classifications. Those different classifications are used to calculate many different confusion matrices. Thus, the columns of primary interest in the prediction object displayed above are the `obs` and `event` columns.  
+
+You do not need to create the ROC curve manually in this assignment. Instead you will use the `roc_curve()` function from the `yardstick` package. The `roc_curve()` function has three primary arguments. The first is a data object which contains the predictions in a "tidy" format. The second is the name of the column that corresponds to the observed outcome (the truth or reference). The third is the name of the column in the data set that corresponds to the model predicted event probability.  
+
+**Pipe the prediction data object for the `mod_1_roc` `caret` object to the `roc_curve()`. The `obs` column is the observed outcome and the `event` column is the model predicted event probability. Display the result to the screen to confirm the `roc_curve()` function worked. If it did the first few rows should correspond to very low threshold values.**  
+
+**Why does the `sensitivity` have values at or near 1 when the `.threshold` is so low?**  
+
+#### SOLUTION
+
+```{r, solution_02e}
+mod_1_roc$pred %>% roc_curve(obs, event)
+```
+
+
+What do you think?  
+When the threshold is very low, nearly all data points are being classified as "event". This leads to nearly every "event" to be classified correctly, while nearly every "non-event" is missed.
+
+### 2f)
+
+You will now visualize the ROC curve associated with `mod_1_roc`.  
+
+**Repeat the same steps you performed in 2e) above, except pipe the result to the `autoplot()` method.**  
+
+#### SOLUTION
+
+```{r, solution_02f}
+mod_1_roc$pred %>% roc_curve(obs, event) %>% autoplot()
+```
+
+
+### 2g)
+
+The ROC curve displayed in 2f) is the resample averaged ROC curve. You can examine the individual resample hold-out test set ROC curves by specifying a grouping structure with the `group_by()` function. This can help you get a sense of the variability in the ROC curve.  
+
+**Pipe the prediction object associated with `mod_1_roc` to the `group_by()` function where you specify the grouping variable to be `Resample`. Pipe the result to `roc_curve()` where you specify the same arguments as in the previous questions. Finally, pipe the result to `autoplot()`.**  
+
+#### SOLUTION
+
+```{r, solution_02g}
+mod_1_roc$pred %>% group_by(Resample) %>% roc_curve(obs, event) %>% autoplot()
+```
+
+
+### 2h)
+
+A function is defined for you in the code chunk below. This function compiles all model results together to enable comparing their ROC curves.  
+
+```{r, make_roc_compile_function}
+compile_all_model_preds <- function(m1, m2, m3, m4, m5, m6, m7, m8)
+{
+  purrr::map2_dfr(list(m1, m2, m3, m4, m5, m6, m7, m8),
+                  as.character(seq_along(list(m1, m2, m3, m4, m5, m6, m7, m8))),
+                  function(ll, lm){
+                    ll$pred %>% tibble::as_tibble() %>% 
+                      select(obs, event, Resample) %>% 
+                      mutate(model_name = lm)
+                  })
+}
+```
+
+
+The code chunk below is also completed for you. It passes the `caret` model objects with the saved predictions to the `compile_all_model_preds()` function. The result is printed for you below so you can see the column names. Notice there is a new column `model_name` which stores the name of the model associated with the resample hold-out test set predictions. By default the code chunk below is not executed.  
+
+```{r, run_compiile_all_model_preds, eval=TRUE}
+all_model_preds <- compile_all_model_preds(mod_1_roc, mod_2_roc, mod_3_roc, 
+                                           mod_4_roc, mod_5_roc,
+                                           mod_6_roc, mod_7_roc, mod_8_roc)
+
+all_model_preds
+```
+
+You will now create a figure which displays the resample averaged ROC curve for each model.  
+
+**Pipe the `all_model_preds` object to `group_by()` and specify the grouping variable as `model_name`. Pipe the result to `roc_curve()` and specify the arguments accordingly. Pipe the result to `autoplot()` to generate the figure.**  
+
+**Which model is the best? Is the result consistent with the ROC AUC summary metrics you calculated previously? Which model is closest to a "completely ineffective model" and why is that so?**  
+
+#### SOLUTION
+
+```{r, solution_02h}
+all_model_preds %>% group_by(model_name) %>% roc_curve(obs, event) %>% autoplot()
+```
+
+What do you think?  
+It looks like model 3 is the best. Its curve most follows the ideal roc curve shape that we discussed in lecture (up and then right). However, I am unsure if it will be overfit, as is the problem with models that are too close to the ideal shape. 
+
+## Problem 03
+
+This problem gets you started working with Bernoulli likelihood functions.  
+
+### 3a)
+
+You are working with a binary outcome, $x$, that has been encoded as $x=1$ to represent the event and $x=0$ to represent the non-event. You collect 8 observations and those observations are stored in a vector `xa`. That vector is defined for you in the code chunk below.  
+
+```{r, make_x_vector_a}
+xa <- c(0, 1, 0, 1, 0, 0, 1, 1)
+```
+
+**Calculate the average of the `xa` vector and print the result to the screen.**  
+
+#### SOLUTION
+
+```{r, solution_3a}
+mean(xa)
+```
+
+### 3b)
+
+**What does the average or mean of `xa` correspond to?**
+#### SOLUTION
+
+This represents the estimated probability of seeing the event
+
+### 3c)
+
+You will model the data generating process in this application with a **Bernoulli** distribution.  
+
+**Write the natural log of the Bernoulli distribution for a single observation $x_n$ and event probability $\mu$.**  
+
+#### SOLUTION
+
+The equation block is started for you below.  
+
+$$ 
+\log(\mu)*x_n + \log(1-\mu)*(1-x_n)
+$$
+
+### 3d)
+
+The `log_bernoulli_pmf()` function is started for you in the code chunk below. It consists of two input arguments. The first, `x`, is a numeric vector of observations of the binary outcome (encoded as 0 and 1). The second, `prob`, is the event probability.  
+
+**Complete the code chunk by correctly calculating the natural log of the Bernoulli PMF. Your function should return a numeric vector with the same length as the `x` input.**  
+
+#### SOLUTION
+
+```{r, solution_03d, eval=TRUE}
+log_bernoulli_pmf <- function(x, prob)
+{
+  return(x*log(prob) + (1-x)*log(1-prob))
+}
+```
+
+
+### 3e)
+
+Let's check the operation of your `log_bernoulli_pmf()` function.  
+
+**Use separate function calls to the `log_bernoulli_pmf()` function to calculate and print to screen the value associated with the 1st, 2nd, 3rd, and 4th observations in the `xa` vector.**  
+
+**Which values are the same and why?**  
+
+**Use an event probability value of 0.2 in each function call.**  
+
+#### SOLUTION
+
+```{r, solution_3e}
+log_bernoulli_pmf(xa[1], .2)
+log_bernoulli_pmf(xa[2], .2)
+log_bernoulli_pmf(xa[3], .2)
+log_bernoulli_pmf(xa[4], .2)
+```
+The values are the same when x=0. They are also the same when x=1. This is expected because the bernoulli is only considering a single event, so when the event is the same the value is the same. 
+
+### 3f)
+
+The observations in the `xa` vector are assumed to be **independent**.  
+
+**Calculate the natural log of the joint distribution for all 8 observations in the `xa` assuming an event probability of 0.2. Print the result to the screen.**  
+
+#### SOLUTION
+
+```{r, solution_3f}
+prod(log_bernoulli_pmf(xa, .2))
+```
+
+
+## Problem 04
+
+The joint distribution of all observations is the **likelihood** function. It tells us the probability of the observed sequence *given* an assumed parameter. In our current application that assumed parameter corresponds to the event probability, $\mu$. The likelihood of all $N$ observations is written in vector notation is given in the equation block below.  
+
+$$ 
+p\left(x_1,x_2,...,x_n,...,x_N \mid \mu \right) = p\left(\mathbf{x} \mid \mu \right)
+$$
+
+In the previous question, you focused on calculating the **log-likelihood** for a given event probability. You will now consider how the event probabilty can be **estimated** from observed data. However, rather than working through the mathematical details, you will start out visualizing the behavior of the log-likelihood to get an intuitive sense of how an **optimization** procedure would find the **Maximum Likelihood Estimate** (MLE).  
+
+You will accomplish this by using for-loops to iterate over many possible *candidate* or *guess* values for the event probability. The for-loops are not the most efficient approach to accomplishing this task. We will see more efficient methods soon. For now, we will use the basic for-loop to accomplish the iteration and graphically solve the optimization problem.  
+
+### 4a)
+
+**Define a candidate grid of event probability values as a numeric vector using the `seq()` function. Specify the `from` argument to be 0.05 and the `to` argument to be 0.95. Create the vector such that there are 101 evenly spaced values between the bounds.**  
+
+**Assign the vector to the `mu_values` object.**  
+
+#### SOLUTION
+
+```{r, solution_04a}
+mu_values <- seq(from=.05, to=.95, length.out=101)
+```
+
+
+### 4b)
+
+The basic structure of a for-loop in `R` is shown in the code chunk below. This simple for-loop simply prints the value of the *iterating variable* `n` to the screen. The `for` keyword is used to begin the for-loop. We must specify the iterating variable and the sequence the iterating variable is **in** within parentheses, `()`. The sequence in the example below is a vector starting at 1 and ending at 4.  
+
+```{r, example_for_loop}
+for( n in 1:4 ){
+  print( n )
+}
+```
+
+When we wish to calculate values and store them as elements within a larger object within a for-loop, it is best to first *initialize* the object with the appropriate size. This variable `example_vector` is initialized with `NA` (missing values) using the `rep()` function 10 times. Notice that the data type conversion function `as.numeric()` is used to ensure the initialized object is numeric.  
+
+```{r, initialize_example_vector}
+example_vector <- rep( as.numeric(NA), 10 )
+
+example_vector %>% class()
+```
+
+To confirm the `example_vector` object contains only missing values.  
+
+```{r, show_example_vector_elements}
+example_vector
+```
+
+We can create a sequence of integers from 1 to the length of `example_vector` using the `seq_along()` function, as shown below. The `seq_along()` function is a useful programmatic approach to creating a vector of integers useful for iteration.  
+
+```{r, show_seq_along_example}
+seq_along(example_vector)
+```
+
+We can now iterate the elements of `example_vector` and populate the elements as desired. The simple example shown below simply sets each element of `example_vector` equal to the square of the element index.  
+
+```{r, populate_example_vector_with_for_loop}
+for( n in seq_along(example_vector) ){
+  example_vector[n] <- n ^ 2
+}
+```
+
+
+The `example_vector` object is displayed below to show it no longer contains missings.  
+
+```{r, show_completed_example_vector}
+example_vector
+```
+
+Obviously this simple example does not require a for-loop. We could have reached the same result by doing the following:  
+
+```{r, check_result_for_example}
+(1:10)^2
+```
+
+However, the point was to demonstrate the key ingredients of populating elements of an object within a for-loop. We must:  
+
+* initialize the object to the appropriate size  
+* iterate over the sequence of elements in the object  
+* perform the necessary calculation and assign result to the object's element  
+
+**You will follow the above steps in order to calculate the log-likelihood associated with the `xa` vector for all candidate event probability values contained in the `mu_values` vector. You must assign the result to the `log_lik_xa` object and that object must have the same length as `mu_values`.**  
+
+**You will still assume that all observations are independent.**  
+
+*NOTE*: You must use a for-loop for this problem. We will make use of *functional programming* techniques to streamline this calculation later in the semester.  
+
+#### SOLUTION
+
+```{r, solution_4b}
+log_lik_xa <- rep(as.numeric(NA), 101)
+for (i in seq_along(mu_values)){
+  log_lik_xa[i] <- prod(log_bernoulli_pmf(xa, mu_values[i]))
+}
+
+```
+
+
+### 4c)
+
+The code chunk below is completed for you. It places the `mu_values` and `log_lik_xa` vectors as column in a tibble. The code chunk below is not evaluated by default.  
+
+```{r, make_results_tibble_xa, eval=TRUE}
+xa_results <- tibble::tibble(
+  mu = mu_values,
+  log_lik = log_lik_xa
+)
+```
+
+
+**Plot the log-likelihood with respect to the event probability using a line plot with `ggplot2`. The line can be created with the `geom_line()` function.**  
+
+**What value of event probability corresponds to the maximum log-likelihood value?**  
+
+#### SOLUTION
+
+```{r, solution_04c}
+xa_results %>% ggplot(mapping=aes(y=log_lik_xa, x=mu_values)) + geom_line()
+```
+.50 probability corresponds to the maximum log-likelihood value
+
+### 4d)
+
+**Create the same line plot as the previous question, but add in an additional layer with `geom_vline()` to show a reference line. Set the `xintercept` argument within `geom_vline()` to the average of `xa`.**  
+
+**What does the average of the binary outcomes correspond to?**  
+
+#### SOLUTION
+
+```{r, solution_04d}
+xa_results %>% ggplot(mapping=aes(y=log_lik_xa, x=mu_values)) + geom_line() + geom_vline(xintercept=mean(xa))
+```
+
+What do you think?  
+The curve looks like a perfect normal distribution. It is symmetrical along the vertical line we added. The predicted mu value is 50% because it is the highest point of the likelihood curve
+
+## Problem 05
+
+You will now repeat the visualization of the log-likelihood but with different data sets.  
+
+### 5a)
+
+The first of the new data sets is given to you in the code chunk below.  
+
+```{r, make_xb_data_set} 
+xb <- c(0, 0, 0, 0, 1, 1, 0, 0)
+```
+
+
+**What is the average of the `xb` set of observations?**  
+
+#### SOLUTION
+
+```{r, solution_5a}
+mean(xb)
+```
+
+### 5b)
+
+**You will calculate the log-likelihood for the `xb` observations, assuming independent observations, for the `mu_values` set of candidate event probabilities. Assign the result to the `log_lik_xb` object.**  
+
+*HINT*: Remember the steps necessary for the for-loop.  
+
+#### SOLUTION
+```{r, solution_5b}
+log_lik_xb <- rep(as.numeric(NA), 101)
+for (i in seq_along(mu_values)){
+  log_lik_xb[i] <- prod(log_bernoulli_pmf(xb, mu_values[i]))
+}
+
+```
+
+
+### 5c)
+
+The log-likelihood results associated with `xb` are compiled into a tibble for you below. By default the code chunk below is not evaluated.  
+
+```{r, make_results_tibble_xb, eval=TRUE}
+xb_results <- tibble::tibble(
+  mu = mu_values,
+  log_lik = log_lik_xb
+)
+```
+
+
+**Plot the log-likelihood with respect to the event probability for the `xb` data set. Include the average of `xb` as a reference vertical line, just as you did previously in Problem 4d).**  
+
+**Which value for the event probability maximizes the log-likelihood? What does that value correspond to?**  
+
+#### SOLUTION
+
+```{r, solution_05c}
+xb_results %>% ggplot(mapping=aes(y=log_lik_xb, x=mu_values)) + geom_line() + geom_vline(xintercept=mean(xb))
+```
+I expected .25 to be the max value, but it appears to be 1 and I am confused
+
+
+### 5d)
+
+The second new data set is provided to you in the code chunk below.  
+
+
+```{r, make_xc_data_set}
+xc <- c(1, 1, 1, 1, 0, 0, 1, 1)
+```
+
+
+**You will calculate the log-likelihood for the `xc` observations, assuming independent observations, for the `mu_values` set of candidate event probabilities. Assign the result to the `log_lik_xc` object.**  
+
+#### SOLUTION
+
+Add as many code chunks as you feel are necessary.
+```{r, solution_5d}
+log_lik_xc <- rep(as.numeric(NA), 101)
+for (i in seq_along(mu_values)){
+  log_lik_xc[i] <- prod(log_bernoulli_pmf(xc, mu_values[i]))
+}
+```
+
+### 5e)
+
+The log-likelihood results associated with `xc` are compiled into a tibble for you below. By default the code chunk below is not evaluated.  
+
+```{r, make_results_tibble_xc, eval=TRUE}
+xc_results <- tibble::tibble(
+  mu = mu_values,
+  log_lik = log_lik_xc
+)
+```
+
+
+**Plot the log-likelihood with respect to the event probability for the `xc` data set. Include the average of `xc` as a reference vertical line, just as you did previously in Problem 4d).**  
+
+**Which value for the event probability maximizes the log-likelihood? What does that value correspond to?**  
+
+#### SOLUTION
+
+```{r, solution_05e}
+xc_results %>% ggplot(mapping=aes(y=log_lik_xc, x=mu_values)) + geom_line() + geom_vline(xintercept=mean(xc))
+```
+The max value is 0 but I expected it to be .75

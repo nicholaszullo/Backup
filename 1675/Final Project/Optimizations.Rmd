@@ -1,0 +1,98 @@
+---
+title: "Optimizations"
+author: "Nick Zullo"
+date: "12/13/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, load_library}
+library(tidyverse)
+library(caret)
+```
+
+```{r, read_data}
+df <- readr::read_csv("cs_1675_fall2021_finalproject.csv", col_names = TRUE)
+df <- df %>% mutate(output=boot::logit(output))
+df_classify <- df %>% mutate(output=ifelse(output < .33, 1, 0))
+```
+
+```{r, derive_features}
+df_derive <- df %>% mutate(x5=1-(x1+x2+x3+x4), w=x2 / (x3+x4), t = v1*v2) %>% mutate( z = (x1+x2) / (x4 + x5))
+df_derive <- df_derive[, !(names(df_derive) %in% 'x2')]
+df_derive_classify <- df_derive %>% mutate(output=as.factor(ifelse(output < .33, "event", "non_event")))
+```
+
+## Questions
+The model performance improves greatly from using the expanded feature set. We are able to use inputs that provide more information to the model, which helps it to better learn the trends for accurate predictions./
+
+```{r, train_best_model_regression}
+train_ctrl <- trainControl(method = "adaptive_cv",
+                             number = 10, repeats = 3,
+                             adaptive = list(min = 5, alpha = 0.05, 
+                                             method = "gls", complete = TRUE),
+                             search = "random")
+metric <- "RMSE"
+preproc <- c("center", "scale")
+
+mod_reg <- train(output ~ ., data=df_derive, method = "gbm",metric =metric, trControl = train_ctrl, preProcess=preproc, verbose=FALSE)
+```
+
+```{r, train_best_model_classification}
+train_ctrl <- trainControl(method = "adaptive_cv",
+                             number = 10, repeats = 3,
+                             adaptive = list(min = 5, alpha = 0.05, 
+                                             method = "gls", complete = TRUE),
+                             classProbs = TRUE,
+                             summaryFunction = twoClassSummary,
+                             search = "random")
+metric <- "Accuracy"
+preproc <- c("center", "scale")
+
+mod_class <- train(output ~ ., data=df_derive_classify, method = "gbm", metric =metric, trControl = train_ctrl, preProcess=preproc, verbose=FALSE)
+```
+
+
+```{r, load_test_set}
+df_test <- readr::read_csv("cs_1675_fall2021_holdout_inputs.csv", col_names = TRUE)
+df_derive_test <- df_test %>% mutate(x5=1-(x1+x2+x3+x4), w=x2 / (x3+x4), t = v1*v2) %>% mutate( z = (x1+x2) / (x4 + x5))
+df_derive_test <- df_derive_test[, !(names(df_derive_test) %in% 'x2')]
+```
+
+
+```{r, make_predictions}
+pred_reg <- predict(mod_reg, df_derive_test)
+pred_class <- predict(mod_class, df_derive_test, type="prob")
+```
+
+The most important features are clearly z and x1. w and x3 do have some importance as well, but not as much. Surprisingly to me, x5 is not as imporant as I expected it to be.
+```{r, evaluate}
+varImp(mod_reg)
+```
+
+
+The categorical variable, m, does not seem to be changing the trends across the predictions given the most important variables. This is shown in the last 2 graphs.
+```{r, visuals}
+df_derive_test <- df_derive_test %>% mutate(pred_reg = pred_reg, pred_class_event=pred_class$event, pred_class_non_event=pred_class$non_event, class=ifelse(pred_class$event > .5, "event", "non_event"))
+
+df_derive %>% ggplot(mapping=aes(y=output)) + geom_point(mapping=aes(x=z))
+df_derive_test %>% ggplot(mapping=aes(y=pred_class_event)) + geom_point(mapping=aes(x=z))
+df_derive %>% ggplot(mapping=aes(y=output)) + geom_point(mapping=aes(x=x1))
+df_derive_test %>% ggplot(mapping=aes(y=pred_class_event)) + geom_point(mapping=aes(x=x1))
+df_derive %>% ggplot(mapping=aes(y=output)) + geom_point(mapping=aes(x=z)) + facet_wrap(~m)
+df_derive %>% ggplot(mapping=aes(y=output)) + geom_point(mapping=aes(x=x1)) + facet_wrap(~m)
+```
+
+```{r, tidy_output}
+results <- data.frame(id=seq(1, nrow(pred_class), length.out=nrow(pred_class)), y=pred_reg, outcome=ifelse(pred_class$event > .5, "event", "non_event"))
+results$probability <- pmax(pred_class$non_event, pred_class$event)
+results %>% glimpse()
+```
+
+```{r, create_file, eval=FALSE}
+write.csv(results, "results.csv", row.names = FALSE)
+```

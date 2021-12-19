@@ -1,0 +1,114 @@
+---
+title: "Exploring_Data"
+author: "Nick Zullo"
+date: "12/8/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, load_tidyverse}
+library(tidyverse)
+```
+```{r, read_data}
+df <- readr::read_csv("cs_1675_fall2021_finalproject.csv", col_names = TRUE)
+```
+```{r, derive_features}
+df_derive <- df %>% mutate(x5=1-(x1+x2+x3+x4), w=x2 / (x3+x4), t = v1*v2) %>% mutate( z = (x1+x2) / (x4 + x5))
+```
+
+
+It seems that x1 models the output well between x1=0 and x1=.15. Also, for values of x1=.4 and greater it seems that the output will be Event. The other inputs do not have trends like those that are present in x1/ x2 seems to have the least decernable trends out of the 4 X values. 
+```{r, plot_y_from_x}
+df %>% select(starts_with("x"), output) %>% tibble::rowid_to_column() %>% 
+  tidyr::gather(key = "key", value = "value", -rowid, -output) %>% 
+  ggplot(mapping = aes(x = value, y = output)) +
+  geom_point(alpha = 0.5) +
+  facet_wrap( ~ key, scales = "free_x") +
+  theme_bw()
+```
+
+Here we plot the relationship between inputs and output, but specifically classify the output into event and nonevent. These graphs do not give as much insight into the relationships like the previous one. We will "jitter" the points so we can see the density more easily. All points have a y value of either 1 or 0, but are slightly perturbed for better viewing. 
+```{r, binary_outcome_vs_inputs}
+df_derive %>% ggplot() + geom_point(mapping = aes(x=x1,y=ifelse(output < .33, 1, 0)), alpha=.5, position=position_jitter(height=.03))
+df_derive %>% ggplot() + geom_point(mapping = aes(x=x2,y=ifelse(output < .33, 1, 0)), alpha=.5, position=position_jitter(height=.03)) 
+df_derive %>% ggplot() + geom_point(mapping = aes(x=v1,y=ifelse(output < .33, 1, 0)), alpha=.5, position=position_jitter(height=.03)) 
+df_derive %>% ggplot() + geom_point(mapping = aes(x=w,y=ifelse(output < .33, 1, 0)), alpha=.5, position=position_jitter(height=.03)) 
+df_derive %>% ggplot() + geom_point(mapping = aes(x=t,y=ifelse(output < .33, 1, 0)), alpha=.5, position=position_jitter(height=.03)) 
+```
+
+
+In this graph of the response both before and after logit transformation. We see that using transformed inputs provides us with much more room for our models to learn. 
+```{r, response}
+df %>% ggplot() + geom_point(mapping=aes(x1, output), alpha=.5) + 
+  geom_point(mapping=aes(x1, boot::logit(output)), color="red", alpha=.5) 
+```
+
+Here we can see clearly that all the X inputs are negatively correlated with x5. This makes sense based on how x5 was defined. 
+```{r, data_viz_x_x5}
+df_derive %>% select(starts_with("x")) %>% tibble::rowid_to_column() %>% 
+  tidyr::gather(key = "key", value = "value", -rowid, -x5) %>% 
+  ggplot(mapping = aes(x = value, y = x5)) +
+  geom_point(alpha = 0.5) +
+  facet_wrap( ~ key, scales = "free_x") +
+  theme_bw()
+```
+
+The next series of graphs show the relationships between the inputs and output, but broken down by m. In all these graphs, we do not see much change based on which m value is used. 
+
+```{r, data_viz_x1}
+df %>% ggplot() + geom_point(mapping = aes(x1,output)) + facet_wrap(~ m)
+```
+
+```{r, data_viz_x2}
+df %>% ggplot() + geom_point(mapping = aes(x2,output)) + facet_wrap(~ m)
+```
+
+```{r, data_viz_x3}
+df %>% ggplot() + geom_point(mapping = aes(x3,output)) + facet_wrap(~ m)
+```
+
+```{r, data_viz_x4}
+df %>% ggplot() + geom_point(mapping = aes(x4,output)) + facet_wrap(~ m)
+```
+There does not seem to be much change between the trends of x variables and y when varying the machine 
+
+```{r, data_viz_v1}
+df %>% ggplot() + geom_point(mapping = aes(v1,output)) + facet_wrap(~ m)
+```
+
+```{r, data_viz_v2}
+df %>% ggplot() + geom_point(mapping = aes(v2,output)) + facet_wrap(~ m)
+```
+
+```{r, data_viz_v3}
+df %>% ggplot() + geom_point(mapping = aes(v3,output)) + facet_wrap(~ m)
+```
+
+```{r, data_viz_v4}
+df %>% ggplot() + geom_point(mapping = aes(v4,output)) + facet_wrap(~ m)
+```
+
+```{r, data_viz_v5}
+df %>% ggplot() + geom_point(mapping = aes(v5,output)) + facet_wrap(~ m)
+```
+
+```{r, data_viz_x5}
+df_derive %>% ggplot() + geom_point(mapping = aes(x5,output)) + facet_wrap(~ m)
+```
+
+```{r, data_viz_w}
+df_derive %>% ggplot() + geom_point(mapping = aes(w,output)) + facet_wrap(~ m)
+```
+
+```{r, data_viz_z}
+df_derive %>% ggplot() + geom_point(mapping = aes(z,output)) + facet_wrap(~ m)
+```
+
+```{r, data_viz_t}
+df_derive %>% ggplot() + geom_point(mapping = aes(t,output)) + facet_wrap(~ m)
+```
+
+

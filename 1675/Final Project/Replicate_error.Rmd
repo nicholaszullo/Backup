@@ -1,0 +1,49 @@
+---
+title: "Replicate Error"
+author: "Nick Zullo"
+date: "12/13/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, load_libraries}
+library(tidyverse)
+library(caret)
+```
+
+```{r, read_data}
+df <- readr::read_csv("cs_1675_fall2021_finalproject.csv", col_names = TRUE)
+df <- df %>% mutate(output=boot::logit(output))
+df %>% glimpse()
+```
+
+
+```{r, derive_features}
+df_derive <- df %>% mutate(x5=1-(x1+x2+x3+x4), w=x2 / (x3+x4), t = v1*v2) %>% mutate( z = (x1+x2) / (x4 + x5))
+df_derive %>% glimpse()
+```
+
+```{r, create_models}
+train_ctrl <- trainControl(method="none")
+metric <- "RMSE"
+preproc <- c("center", "scale")
+
+print("Training base model")
+mod_01 <- train(output ~ ., data=df, method="lm", metric=metric, preProcess=preproc, trControl=train_ctrl)
+print("Training expanded model")
+mod_02 <- train(output ~ ., data=df_derive, method="lm", metric=metric, preProcess=preproc, trControl=train_ctrl)
+```
+
+```{r, resample_models}
+train_ctrl <- trainControl(method="cv", number=5)
+metric <- "RMSE"
+preproc <- c("center", "scale")
+
+print("Training base model")
+mod_01_cv <- train(output ~ ., data=df, method="lm", metric=metric, preProcess=preproc, trControl=train_ctrl)
+print("Training expanded model")
+mod_02_cv <- train(output ~ ., data=df_derive, method="lm", metric=metric, preProcess=preproc, trControl=train_ctrl)
+```

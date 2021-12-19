@@ -1,0 +1,326 @@
+---
+title: "Linear_Models"
+author: "Nick Zullo"
+date: "12/8/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, load_tidyverse}
+library(tidyverse)
+```
+
+```{r, read_data}
+df <- readr::read_csv("cs_1675_fall2021_finalproject.csv", col_names = TRUE)
+df <- df %>% mutate(output=boot::logit(output))
+df %>% glimpse()
+```
+
+```{r, derive_features}
+df_derive <- df %>% mutate(x5=1-(x1+x2+x3+x4), w=x2 / (x3+x4), t = v1*v2) %>% mutate( z = (x1+x2) / (x4 + x5))
+df_derive <- df_derive[, !(names(df_derive) %in% 'x2')]
+```
+
+## Part A
+
+```{r, create_linear_models}
+mod_01_base <- lm(output ~ ., df)
+mod_02_base <- lm(output ~ (. -m):m , df)
+mod_03_base <- lm(output ~ (.-m)^2, df)
+mod_01_expand <- lm(output ~ ., df_derive)
+mod_02_expand <- lm(output ~ (.-m):m, df_derive)
+mod_03_expand <- lm(output ~ (.)^2, df_derive[, !(names(df_derive) %in% 'm')])#Exclude m by extracting all the other columns
+mod_01_basis <- lm(output ~ splines::ns(x5, df=5):(.-x5-m), df_derive)
+mod_02_basis <- lm(output ~ splines::ns(x5, df=10)+(.-x5-m), df_derive)
+mod_03_basis  <- lm(output ~ splines::ns(x5, df=10)+(.-x5-m)^2, df_derive)
+```
+
+```{r, evalualte_models}
+broom::glance(mod_01_base)
+broom::glance(mod_02_base)
+broom::glance(mod_03_base)
+broom::glance(mod_01_expand)
+broom::glance(mod_02_expand)
+broom::glance(mod_03_expand)
+broom::glance(mod_01_basis)
+broom::glance(mod_02_basis)
+broom::glance(mod_03_basis)
+```
+Using BIC to pick the best model, we see that the 10 degrees of freedom splines on x5 added with pairwise interactions of the other continuous features reaches the lowest BIC. This is followed closely by using pairwise interactions between continuous features, and then by 10 degrees of freedom splines added with the other continuous features. the R^2 value of the top 2 models are close to each other, but the 3rd place model does not have a high R^2 value
+
+
+```{r, coef_plot_mods}
+coefplot::coefplot(mod_03_basis)
+coefplot::coefplot(mod_03_expand)
+coefplot::coefplot(mod_02_basis)
+```
+These coefficient summaries seem very different between all 3 models. The best model has around 19 statstically significant features, compared to the 2nd best which has around 9. However, the 3rd best model also has around 9 significant features. The spline features seem to be most important in the 2 models that use those, as most of the coefficients do not contain 0 in the confidence range. 
+
+
+```{r, define_funcs}
+lm_logpost <- function(unknowns, my_info)
+{
+  # specify the number of unknown beta parameters
+  length_beta <- ncol(my_info$design_matrix)
+  
+  # extract the beta parameters from the `unknowns` vector
+  beta_v <- unknowns[1:length_beta]
+  
+  # extract the unbounded noise parameter, varphi
+  lik_varphi <- unknowns[length_beta+1]
+  
+  # back-transform from varphi to sigma
+  lik_sigma <- exp(lik_varphi)
+  
+  # extract design matrix
+  X <- my_info$design_matrix
+  
+  # calculate the linear predictor
+  mu <- as.vector(X %*% as.matrix(beta_v))
+  
+  # evaluate the log-likelihood
+  log_lik <- sum(dnorm(x = my_info$yobs, mean = mu, sd = lik_sigma, log = TRUE))
+  
+  # evaluate the log-prior
+  log_prior_beta <- sum(dnorm(x = beta_v, mean = my_info$mu_beta, sd = my_info$tau_beta, log = TRUE))
+  
+  log_prior_sigma <- sum(dexp(x = lik_sigma, rate = my_info$sigma_rate, log = TRUE))
+  
+  # add the mean trend prior and noise prior together
+  log_prior <- log_prior_beta + log_prior_sigma
+  
+  # account for the transformation
+  log_derive_adjust <- lik_varphi
+  
+  # sum together
+  return(log_lik + log_prior + log_derive_adjust)
+}
+
+my_laplace <- function(start_guess, logpost_func, ...)
+{
+  # code adapted from the `LearnBayes`` function `laplace()`
+  fit <- optim(start_guess,
+               logpost_func,
+               gr = NULL,
+               ...,
+               method = "BFGS",
+               hessian = TRUE,
+               control = list(fnscale = -1, maxit = 1001))
+  
+  mode <- fit$par
+  post_var_matrix <- -solve(fit$hessian)
+  p <- length(mode)
+  int <- p/2 * log(2 * pi) + 0.5 * log(det(post_var_matrix)) + logpost_func(mode, ...)
+  # package all of the results into a list
+  list(mode = mode,
+       var_matrix = post_var_matrix,
+       log_evidence = int,
+       converge = ifelse(fit$convergence == 0,
+                         "YES", 
+                         "NO"),
+       iter_counts = as.numeric(fit$counts[1]))
+}
+
+viz_post_coefs <- function(post_means, post_sds, xnames)
+{
+  tibble::tibble(
+    mu = post_means,
+    sd = post_sds,
+    x = xnames
+  ) %>% 
+    mutate(x = factor(x, levels = xnames)) %>% 
+    ggplot(mapping = aes(x = x)) +
+    geom_hline(yintercept = 0, color = 'grey', linetype = 'dashed') +
+    geom_point(mapping = aes(y = mu)) +
+    geom_linerange(mapping = aes(ymin = mu - 2 * sd,
+                                 ymax = mu + 2 * sd,
+                                 group = x)) +
+    labs(x = 'feature', y = 'coefficient value') +
+    coord_flip() +
+    theme_bw()
+}
+
+generate_lm_post_samples <- function(mvn_result, length_beta, num_samples)
+{
+  MASS::mvrnorm(n = num_samples,
+                mu = mvn_result$mode,
+                Sigma = mvn_result$var_matrix) %>% 
+    as.data.frame() %>% tibble::as_tibble() %>% 
+    purrr::set_names(c(sprintf("beta_%02d", 0:(length_beta-1)), "varphi")) %>% 
+    mutate(sigma = exp(varphi))
+}
+
+post_lm_pred_samples <- function(Xnew, Bmat, sigma_vector)
+{
+  # number of new prediction locations
+  M <- nrow(Xnew)
+  # number of posterior samples
+  S <- nrow(Bmat)
+  
+  # matrix of linear predictors
+  Umat <- Xnew %*% t(Bmat)
+  
+  # assmeble matrix of sigma samples, set the number of rows
+  Rmat <- matrix(rep(sigma_vector, M), M, byrow = TRUE)
+  
+  # generate standard normal and assemble into matrix
+  # set the number of rows
+  Zmat <- matrix(rnorm(M*S), M, byrow = TRUE)
+  
+  # calculate the random observation predictions
+  Ymat <- Umat + Rmat * Zmat
+  
+  # package together
+  list(Umat = Umat, Ymat = Ymat)
+}
+
+make_post_lm_pred <- function(Xnew, post)
+{
+  Bmat <- post %>% select(starts_with("beta_")) %>% as.matrix()
+  
+  sigma_vector <- post %>% pull(sigma)
+  
+  post_lm_pred_samples(Xnew, Bmat, sigma_vector)
+}
+
+summarize_lm_pred_from_laplace <- function(mvn_result, Xtest, num_samples)
+{
+  # generate posterior samples of the beta parameters
+  post <- generate_lm_post_samples(mvn_result, ncol(Xtest), num_samples)
+  
+  # make posterior predictions on the test set
+  pred_test <- make_post_lm_pred(Xtest, post)
+  # calculate summary statistics on the predicted mean and response
+  # summarize over the posterior samples
+  
+  # posterior mean
+  mu_avg <- rowMeans(pred_test$Umat)
+  y_avg <- rowMeans(pred_test$Ymat)
+
+  # posterior quantiles for the middle 95% uncertainty intervals
+  mu_lwr <- apply(pred_test$Umat, 1, stats::quantile, probs = 0.025)
+  mu_upr <- apply(pred_test$Umat, 1, stats::quantile, probs = 0.975)
+  y_lwr <- apply(pred_test$Ymat, 1, stats::quantile, probs = 0.025)
+  y_upr <- apply(pred_test$Ymat, 1, stats::quantile, probs = 0.975)
+  
+  # book keeping
+  tibble::tibble(
+    mu_avg = mu_avg,
+    mu_lwr = mu_lwr,
+    mu_upr = mu_upr,
+    y_avg = y_avg,
+    y_lwr = y_lwr,
+    y_upr = y_upr
+  ) %>% 
+    tibble::rowid_to_column("pred_id")
+}
+
+tidy_predict <- function(mod, xnew)
+{
+  pred_df <- predict(mod, xnew, interval = "confidence") %>% 
+    as.data.frame() %>% tibble::as_tibble() %>% 
+    dplyr::select(pred = fit, ci_lwr = lwr, ci_upr = upr) %>% 
+    bind_cols(predict(mod, xnew, interval = 'prediction') %>% 
+                as.data.frame() %>% tibble::as_tibble() %>% 
+                dplyr::select(pred_lwr = lwr, pred_upr = upr))
+  xnew %>% bind_cols(pred_df)
+}
+
+make_splines_training_knots <- function(J, train_data, xname)
+{
+  
+  x <- train_data %>% select(all_of(xname)) %>% pull()
+  
+  train_basis <- splines::ns(x, df = J)
+  
+  as.vector(attributes(train_basis)$knots)
+}
+```
+
+## Part B
+I used the top 2 from above to fit with Bayesian methods. Both of the best models used the expanded feature set, so I used that again this time. 
+
+```{r, define_bayes_data}
+X01 <- model.matrix(output ~ (. - m )^2, df_derive)
+X02 <- model.matrix(output ~ splines::ns(x5, df=10)+(.-x5-m)^2, df_derive)
+
+info_01 <-  list(
+  yobs = df_derive$output,
+  design_matrix = X01,
+  mu_beta = 0,
+  tau_beta = 5,
+  sigma_rate = 1
+)
+info_02 <-  list(
+  yobs = df_derive$output,
+  design_matrix = X02,
+  mu_beta = 0,
+  tau_beta = 5,
+  sigma_rate = 1
+)
+```
+
+When running the Bayesian models, we find that model 2 just slightly beats out model 1. This aligns with the findings from the non-Bayesian models. The same formula obtained the best model for Bayesian and non-Bayesian models.
+```{r, run_bayes_models}
+laplace_01 <- my_laplace(rep(0, length.out= ncol(X01)+1) , lm_logpost,info_01)
+laplace_02 <- my_laplace(rep(0, length.out= ncol(X02)+1) , lm_logpost,info_02)
+
+laplace_01$log_evidence
+laplace_02$log_evidence
+```
+
+
+This coefficient summary is different than the previous one from the model with 10 degrees of freedom splines with x5 added to the other continuous variables. There are now only 6 statistically significant features, compared to the many more using lm(). The spline coefficients now are not all significant like they were previously. 
+```{r, eval_bayes_models}
+viz_post_coefs(laplace_02$mode[1:ncol(X02)], sqrt(diag(laplace_02$var_matrix[,1:ncol(X02)])), colnames(X02))
+```
+
+For the uncertainty on sigma compared to lm()'s MLE, these values are similar. Both the Bayesian and non-Bayesian methods achieve nearly the same result.
+
+## Part C
+For this analysis, I will use the best model from the non-Bayesian method and the best model from the Bayesian method.
+
+viz_grid will be created varying primarty input x1 and secondary input x5, and holding everything else constant for the model.
+```{r, linear_predictions}
+viz_grid <- expand.grid(x1 = seq(0,1, length.out=101), x5=seq(0,1,length.out=5), x4=mean(df_derive$x4),x3=mean(df_derive$x3), v1=mean(df_derive$v1), v2=mean(df_derive$v2), v3=mean(df_derive$v3),v4=mean(df_derive$v4), v5=mean(df_derive$v5), w=mean(df_derive$w), t=mean(df_derive$t), z=mean(df_derive$z),KEEP.OUT.ATTRS = FALSE, stringsAsFactors = FALSE) %>% as.data.frame() %>% tibble::as_tibble()
+
+X02_bayes_test = model.matrix( ~ splines::ns(x5, knots = make_splines_training_knots(10, df_derive, "x5"))+(.-x5)^2, viz_grid)
+X03_expand_test = model.matrix( ~ (.)^2, viz_grid) %>% as.data.frame() %>% tibble::as_tibble()
+
+
+pred_bayes_02 <- summarize_lm_pred_from_laplace(laplace_02,X02_bayes_test, 5000)
+pred_expand_03 <- tidy_predict(mod_03_expand, X03_expand_test)
+
+```
+
+
+The trends for the first model, the non-Bayesian, is very different than the one for the Bayesian model. In the first graph, all the mean trends are downward sloping. They also cover a larger range, going well beyond the -10 to 10 that the Bayesian model stays in. Both see a convergence point in the first 3 facets, but in the first model sees it progressively moving left, compared to in the Bayesian model where it stays in the same spot. We see that the grey confidence interval increases with both models as x5 increases. The orange prediction interval follows this trend too, but in the first model it does not get any higher than the grey interval. 
+
+
+```{r, graph_mean_trends}
+pred_expand_03 %>% 
+  ggplot(mapping = aes(x = x1)) +
+  geom_ribbon(mapping = aes(ymin = pred_lwr, ymax = pred_upr),
+              fill = 'orange') +
+  geom_ribbon(mapping = aes(ymin = ci_lwr, ymax = ci_upr),
+              fill = 'grey') +
+  geom_line(mapping = aes(y = pred),
+            color = 'black') + 
+  facet_wrap(~x5, labeller = "label_both")
+
+pred_bayes_02 %>% left_join(viz_grid %>% as.data.frame() %>% tibble::rowid_to_column("pred_id"),
+            by = 'pred_id') %>% 
+  ggplot(mapping = aes(x = x1)) +
+  geom_ribbon(mapping = aes(ymin = y_lwr, ymax = y_upr),
+              fill = 'orange') +
+  geom_ribbon(mapping = aes(ymin = mu_lwr, ymax = mu_upr),
+              fill = 'grey') +
+  geom_line(mapping = aes(y = mu_avg),
+            color = 'black') + 
+  facet_wrap(~x5, labeller = "label_both")
+
+
+```

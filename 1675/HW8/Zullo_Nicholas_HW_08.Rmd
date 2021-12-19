@@ -863,7 +863,7 @@ make_splines_training_knots <- function(J, train_data, xname)
 #### SOLUTION
 
 ```{r, solution_04e}
-X06_test <- model.matrix(~ splines::ns(x1, knots = make_splines_training_knots(12, viz_grid, "x1"), df=12):(x2+I(x2^2)+I(x2^3)+I(x2^4)), data=viz_grid)
+X06_test <- model.matrix(~ splines::ns(x1, knots = make_splines_training_knots(12, df, "x1"), df=12):(x2+I(x2^2)+I(x2^3)+I(x2^4)), data=viz_grid)
 post_pred_summary_viz_06_weak <- summarize_lm_pred_from_laplace(laplace_06_weak,X06_test, 5000)
 post_pred_summary_viz_06_strong <- summarize_lm_pred_from_laplace(laplace_06_strong,X06_test, 5000)
 post_pred_summary_viz_06_very_strong <- summarize_lm_pred_from_laplace(laplace_06_very_strong,X06_test, 5000)

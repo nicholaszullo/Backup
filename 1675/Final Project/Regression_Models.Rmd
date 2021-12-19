@@ -1,0 +1,137 @@
+---
+title: "Regression Models"
+author: "Nick Zullo"
+date: "12/10/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, load_packages}
+library(torch)
+library(tidyverse)
+library(caret)
+library(glmnet)
+```
+
+```{r, read_data}
+df <- readr::read_csv("cs_1675_fall2021_finalproject.csv", col_names = TRUE)
+df <- df %>% mutate(output=boot::logit(output))
+smp_size <- floor(0.75 * nrow(df))
+set.seed(123)
+train_ind <- sample(seq_len(nrow(df)), size = smp_size)
+df_train <- df[train_ind,]#Make an explicit test and train set for the neural net
+df_test <- df[-train_ind,]
+```
+
+```{r, derive_features}
+df_derive <- df %>% mutate(x5=1-(x1+x2+x3+x4), w=x2 / (x3+x4), t = v1*v2) %>% mutate( z = (x1+x2) / (x4 + x5))
+df_derive <- df_derive[, !(names(df_derive) %in% 'x2')]
+df_derive_train <- df_derive[train_ind,]
+df_derive_test <- df_derive[-train_ind,]
+```
+
+Even after removing correlated x inputs, I'm still seeing deficient fit warnings, but only with the simple models that wouldn't beat gbm anyway
+
+```{r, init_models}
+train_ctrl <- trainControl(method="cv", number=5)
+metric <- "RMSE"
+preproc <- c("center", "scale")
+
+mod_01 <- train(output ~ ., data=df, method="lm", metric=metric, preProcess=preproc, trControl=train_ctrl)
+mod_02 <- train(output ~ ., data=df_derive, method="lm", metric=metric, preProcess=preproc, trControl=train_ctrl)
+mod_03 <- train(output ~ (.-m)^2, df_derive, method="lm", metric=metric, preProcess=preproc, trControl=train_ctrl)
+mod_04 <- train(output ~ splines::ns(x5, df=10)+(.-x5-m)^2, df_derive, method="lm", metric=metric, preProcess=preproc, trControl=train_ctrl)
+
+mod_05 <- train(output ~ (.-m)^2:m, df_derive, method="glmnet", metric=metric, preProcess=preproc, trControl=train_ctrl)
+mod_06 <- train(output ~ splines::ns(x5, df=10)+(.-x5-m)^2, df_derive, method="glmnet", metric=metric, preProcess=preproc, trControl=train_ctrl)
+
+mod_07_base <- nn_sequential(
+  nn_batch_norm1d(ncol(df_train)-1),
+  nn_linear(ncol(df_train)-1, 300),
+  nn_relu(),
+  nn_dropout(p=.3),
+  nn_linear(300,50),
+  nn_relu(),
+  nn_linear(50,1)
+)
+mod_07_expand <- nn_sequential(
+  nn_batch_norm1d(ncol(df_derive_train)-1),
+  nn_linear(ncol(df_derive_train)-1, 500),
+  nn_relu(),
+  nn_dropout(p=.3),
+  nn_linear(500,50),
+  nn_relu(),
+  nn_linear(50,1)
+)
+
+mod_08_base <- train(output ~ ., data=df, method = "rf", metric = metric, trControl = train_ctrl, tuneGrid = expand.grid(mtry = 4), importance = TRUE)
+mod_09_base <- train(output ~ ., data=df, method = "gbm", metric =metric, trControl = train_ctrl, preProcess=preproc, verbose=FALSE)
+mod_08_expand <- train(output ~ ., data=df_derive, method = "rf", metric = metric, trControl = train_ctrl, tuneGrid = expand.grid(mtry = 4), importance = TRUE)
+mod_09_expand <- train(output ~ ., data=df_derive, method = "gbm", metric =metric, trControl = train_ctrl, preProcess=preproc, verbose=FALSE)
+mod_10 <- train(output ~ ., data=df_derive, method = "svmLinear", metric=metric, trControl=train_ctrl, preProcess=preproc)
+mod_11 <- train(output ~ (.-m)^2, data=df_derive, method = "glmboost", metric=metric, trControl=train_ctrl, preProcess=preproc)
+```
+
+
+I found that these hyperparameters for dropout, number of hidden units, learning rate, and number of epochs resulted in the best test set RMSE performance
+```{r, train_nnet}
+train_nnet <- function(model, df) {
+  X <- data.matrix(df[, !(names(df) %in% 'output')])
+  Y <- data.matrix(df[, 'output'])
+  X <- torch_tensor(X)
+  Y <- torch_tensor(Y, dtype=torch_long())
+  eta <- 6e-3
+  optimizer <- optim_adam(model$parameters, lr = eta)
+  for (t in 1:500){
+    preds <- model(X)
+    loss <- (preds - Y)$pow(2)$sum()
+    model$zero_grad()
+    loss$backward()
+   # if (t %% 20 == 0)
+    #  cat("Epoch: ", t, "   Loss: ", loss$item(), "\n")
+    optimizer$step()
+  
+  }
+  print((preds - Y)$pow(2)$mean()$sqrt())
+  return(model)
+}
+```
+
+Prints the train set RMSE, don't want to minimize too much or we will overfit and test set performance will be degraded
+```{r, train_nnets}
+mod_07_base <- train_nnet(mod_07_base, df_train)
+mod_07_expand <- train_nnet(mod_07_expand, df_derive_train)
+```
+
+
+The best model is the GBM model using the derived features, which is the clear winner for lowest RMSE. Random forest is 2nd, and my neural network gets 3rd. I was able to get the test set error down to ~1.1 with mod_07_expand, which is pretty good. This beats the performance of model 6, which is closer to 1.35 or 1.4. All of these top models use the expanded feature set, which shows the importance of creating extra features from data you are given. 
+```{r, evaluate_models}
+all_caret_models <- resamples(list(linear_base = mod_01,
+                                    linear_expand = mod_02,
+                                    top_linear_base = mod_03,
+                                    second_linear_base = mod_04,
+                                    top_linear_expand = mod_05,
+                                    second_linear_expand = mod_06,
+                                    rf_base = mod_08_base,
+                                    rf_expand = mod_08_expand,
+                                    gbm_base = mod_09_base,
+                                    gbm_expand = mod_09_expand,
+                                    svm = mod_10,
+                                    glmboost = mod_11))
+dotplot(all_caret_models, metric=metric)
+
+X <- data.matrix(df_test[, !(names(df_test) %in% 'output')])
+Y <- data.matrix(df_test[, 'output'])
+X <- torch_tensor(X)
+Y <- torch_tensor(Y, dtype=torch_long())
+print((mod_07_base(X) - Y)$pow(2)$mean()$sqrt())
+
+X <- data.matrix(df_derive_test[, !(names(df_derive_test) %in% 'output')])
+Y <- data.matrix(df_derive_test[, 'output'])
+X <- torch_tensor(X)
+Y <- torch_tensor(Y, dtype=torch_long())
+print((mod_07_expand(X) - Y)$pow(2)$mean()$sqrt())
+```

@@ -1,0 +1,290 @@
+---
+title: "Binary Classification"
+author: "Nick Zullo"
+date: "12/12/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, load_library}
+library(tidyverse)
+library(caret)
+library(torch)
+```
+
+```{r, read_data}
+df <- readr::read_csv("cs_1675_fall2021_finalproject.csv", col_names = TRUE)
+df <- df %>% mutate(output=ifelse(output < .33, "event", "non_event"))
+df_numeral <- df %>% mutate(output=ifelse(output == 'event', 2, 1))#Cross Entropy Loss didn't like using 1 and 0 for some reason? Regardless, 2 output nodes for 2 classes
+smp_size <- floor(0.75 * nrow(df))
+set.seed(123)
+train_ind <- sample(seq_len(nrow(df)), size = smp_size)
+df_train <- df[train_ind,]
+df_test <- df[-train_ind,]
+df_numeral_train <- df_numeral[train_ind,] 
+df_numeral_test <- df_numeral[-train_ind,]
+```
+
+```{r, derive_features}
+df_derive <- df %>% mutate(x5=1-(x1+x2+x3+x4), w=x2 / (x3+x4), t = v1*v2) %>% mutate( z = (x1+x2) / (x4 + x5))
+df_derive <- df_derive[, !(names(df_derive) %in% 'x2')]#Dont use x2 in the derived feature set
+df_derive_numeral <- df_derive %>% mutate(output=ifelse(output == 'event', 2,1))
+df_derive_train <- df_derive[train_ind,]
+df_derive_test <- df_derive[-train_ind,]
+df_derive_numeral_train <- df_derive_numeral[train_ind,]
+df_derive_numeral_test <- df_derive_numeral[-train_ind,]
+```
+
+## Part A, using Accuracy
+
+```{r, init_models}
+train_ctrl <- trainControl(method='cv', number=5)
+metric <- "Accuracy"
+preproc <- c("center", "scale")
+
+mod_01 <- train(output ~ ., data=df, method="glm", metric=metric, preProcess=preproc, trControl=train_ctrl)
+mod_02 <- train(output ~ ., data=df_derive, method="glm", metric=metric, preProcess=preproc, trControl=train_ctrl)
+mod_03 <- train(output ~ (.-m)^2, df_derive, method="glm", metric=metric, preProcess=preproc, trControl=train_ctrl)
+mod_04 <- train(output ~ splines::ns(x5, df=10)+(.-x5-m)^2, df_derive, method="glm", metric=metric, preProcess=preproc, trControl=train_ctrl)
+
+mod_05 <- train(output ~ (.-m)^2:m, df_derive, method="glmnet", metric=metric, preProcess=preproc, trControl=train_ctrl)
+mod_06 <- train(output ~ splines::ns(x5, df=10)+(.-x5-m)^2, df_derive, method="glmnet", metric=metric, preProcess=preproc, trControl=train_ctrl)
+mod_07_base <- nn_sequential(
+  nn_batch_norm1d(ncol(df_train)-1),
+  nn_linear(ncol(df_train)-1, 300),
+  nn_relu(),
+  nn_dropout(p=.3),
+  nn_linear(300,50),
+  nn_relu(),
+  nn_linear(50,2)
+)
+mod_07_expand <- nn_sequential(
+  nn_batch_norm1d(ncol(df_derive_numeral_train)-1),
+  nn_linear(ncol(df_derive_train)-1, 300),
+  nn_relu(),
+  nn_dropout(p=.3),
+  nn_linear(300,50),
+  nn_relu(),
+  nn_linear(50,2)
+)
+
+mod_08_base <- train(output ~ ., data=df, method = "rf", metric = metric, trControl = train_ctrl, tuneGrid = expand.grid(mtry = 4), importance = TRUE)
+mod_09_base <- train(output ~ ., data=df, method = "gbm", metric =metric, trControl = train_ctrl, preProcess=preproc)
+mod_08_expand <- train(output ~ ., data=df_derive, method = "rf", metric = metric, trControl = train_ctrl, tuneGrid = expand.grid(mtry = 4), importance = TRUE)
+mod_09_expand <- train(output ~ ., data=df_derive, method = "gbm", metric =metric, trControl = train_ctrl, preProcess=preproc)
+mod_10 <- train(output ~ ., data=df_derive, method = "svmLinear", metric=metric, trControl=train_ctrl, preProcess=preproc)
+mod_11 <- train(output ~ (.-m)^2, data=df_derive, method = "glmboost", metric=metric, trControl=train_ctrl, preProcess=preproc)
+
+```
+
+
+
+```{r, train_nnet}
+train_nnet <- function(model, df) {
+  loss_fn <- nn_cross_entropy_loss()
+  X <- data.matrix(df[, !(names(df) %in% 'output')])
+  Y <- data.matrix(df[, 'output'])
+  X <- torch_tensor(X)
+  Y <- torch_tensor(Y, dtype=torch_long())$flatten()
+  eta <- 6e-3
+  optimizer <- optim_adam(model$parameters, lr = eta)
+  for (t in 1:100){
+    preds <- model(X)
+    loss <- loss_fn(preds, Y)
+    model$zero_grad()
+    loss$backward()
+   # if (t %% 20 == 0)
+    #  cat("Epoch: ", t, "   Loss: ", loss$item(), "\n")
+    optimizer$step()
+  
+  }
+  print(loss_fn(preds, Y))
+  return(model)
+}
+```
+
+
+```{r, train_nnets}
+mod_07_base <- train_nnet(mod_07_base, df_numeral_train)
+mod_07_expand <- train_nnet(mod_07_expand, df_derive_numeral_train)
+```
+
+
+We see that the best model is the gbm model and random forest model. This time, the neural network only achieves average performance
+```{r, evaluate_models}
+all_caret_models <- resamples(list(linear_base = mod_01,
+                                    linear_expand = mod_02,
+                                    top_linear_base = mod_03,
+                                    second_linear_base = mod_04,
+                                    top_linear_expand = mod_05,
+                                    second_linear_expand = mod_06,
+                                    rf_base = mod_08_base,
+                                    rf_expand = mod_08_expand,
+                                    gbm_base = mod_09_base,
+                                    gbm_expand = mod_09_expand,
+                                    svm = mod_10,
+                                    glmboost = mod_11))
+dotplot(all_caret_models, metric=metric)
+
+
+X <- data.matrix(df_numeral_test[, !(names(df_numeral_test) %in% 'output')])
+Y <- data.matrix(df_numeral_test[, 'output'])
+X <- torch_tensor(X)
+Y <- torch_tensor(Y)$flatten()
+preds <- mod_07_base(X)
+classes <- torch_max(preds, dim=2)[[2]]
+print((classes == Y)$sum()$item()/nrow(df_numeral_test))
+
+X <- data.matrix(df_derive_numeral_test[, !(names(df_derive_numeral_test) %in% 'output')])
+Y <- data.matrix(df_derive_numeral_test[, 'output'])
+X <- torch_tensor(X)
+Y <- torch_tensor(Y)$flatten()
+preds <- mod_07_expand(X)
+classes <- torch_max(preds, dim=2)[[2]]
+print((classes == Y)$sum()$item()/nrow(df_derive_numeral_test))
+```
+
+## Part B, using ROC curve
+
+```{r, init_models_roc}
+train_ctrl <- trainControl(method='cv', number=5, 
+                          summaryFunction = twoClassSummary,
+                          classProbs = TRUE,
+                          savePredictions = TRUE)
+metric <- "ROC"
+preproc <- c("center", "scale")
+
+mod_01 <- train(output ~ ., data=df, method="glm", metric=metric, preProcess=preproc, trControl=train_ctrl)
+mod_02 <- train(output ~ ., data=df_derive, method="glm", metric=metric, preProcess=preproc, trControl=train_ctrl)
+mod_03 <- train(output ~ (.-m)^2, df_derive, method="glm", metric=metric, preProcess=preproc, trControl=train_ctrl)
+mod_04 <- train(output ~ splines::ns(x5, df=10)+(.-x5-m)^2, df_derive, method="glm", metric=metric, preProcess=preproc, trControl=train_ctrl)
+
+mod_05 <- train(output ~ (.-m)^2:m, df_derive, method="glmnet", metric=metric, preProcess=preproc, trControl=train_ctrl)
+mod_06 <- train(output ~ splines::ns(x5, df=10)+(.-x5-m)^2, df_derive, method="glmnet", metric=metric, preProcess=preproc, trControl=train_ctrl)
+mod_07_base <- nn_sequential(
+  nn_batch_norm1d(ncol(df_train)-1),
+  nn_linear(ncol(df_train)-1, 300),
+  nn_relu(),
+  nn_dropout(p=.3),
+  nn_linear(300,50),
+  nn_relu(),
+  nn_linear(50,1),
+  nn_sigmoid()
+)
+mod_07_expand <- nn_sequential(
+  nn_batch_norm1d(ncol(df_derive_numeral_train)-1),
+  nn_linear(ncol(df_derive_train)-1, 500),
+  nn_relu(),
+  nn_dropout(p=.3),
+  nn_linear(500,50),
+  nn_relu(),
+  nn_linear(50,1),
+  nn_sigmoid()
+)
+
+mod_08_base <- train(output ~ ., data=df, method = "rf", metric = metric, trControl = train_ctrl, tuneGrid = expand.grid(mtry = 4))
+mod_09_base <- train(output ~ ., data=df, method = "gbm", metric =metric, trControl = train_ctrl, preProcess=preproc, verbose=FALSE)
+mod_08_expand <- train(output ~ ., data=df_derive, method = "rf", metric = metric, trControl = train_ctrl, tuneGrid = expand.grid(mtry = 4))
+mod_09_expand <- train(output ~ ., data=df_derive, method = "gbm", metric =metric, trControl = train_ctrl, preProcess=preproc, verbose=FALSE)
+mod_10 <- train(output ~ ., data=df_derive, method = "svmLinear", metric=metric, trControl=train_ctrl, preProcess=preproc)
+mod_11 <- train(output ~ (.-m)^2, data=df_derive, method = "glmboost", metric=metric, trControl=train_ctrl, preProcess=preproc)
+
+```
+
+Go back to SSE for training this network. We are now interpreting the single output node as the probability of event so that we can vary the threshold later
+```{r, train_nnet_1_class}
+train_nnet_roc <- function(model, df) {
+  X <- data.matrix(df[, !(names(df) %in% 'output')])
+  Y <- data.matrix(df[, 'output'])
+  X <- torch_tensor(X)
+  Y <- torch_tensor(Y, dtype=torch_long())
+  eta <- 6e-3
+  optimizer <- optim_adam(model$parameters, lr = eta)
+  for (t in 1:100){
+    preds <- model(X)
+    loss <- (preds - Y)$pow(2)$sum()
+    model$zero_grad()
+    loss$backward()
+    if (t %% 10 == 0)
+      cat("Epoch: ", t, "   Loss: ", loss$item(), "\n")
+    optimizer$step()
+  
+  }
+  print((preds - Y)$pow(2)$mean()$sqrt())
+  return(model)
+}
+```
+
+No longer using Cross Entropy Loss so lets go back to defining the classes as 0 and 1
+```{r, shift_data_back}
+df_numeral <- df_numeral %>% mutate(output=output-1)
+df_numeral_train <- df_numeral[train_ind,]
+df_numeral_test <- df_numeral[-train_ind,]
+
+df_derive_numeral <- df_derive_numeral %>% mutate(output=output-1)
+df_derive_numeral_train <- df_derive_numeral[train_ind,]
+df_derive_numeral_test <- df_derive_numeral[-train_ind,]
+
+```
+
+```{r, run_nnet_training_roc}
+mod_07_base <- train_nnet_roc(mod_07_base, df_numeral_train)
+mod_07_expand <- train_nnet_roc(mod_07_expand, df_derive_numeral_train)
+```
+
+Returns c(TPR, FPR) for 9 values of threshold for each neural net so that we can graph the ROC curve later
+```{r, evaluate_nnet_roc}
+calc_nnet_acc <- function(model, data, Y, threshold) {
+  preds <- model(data)
+  preds <- as_array(preds) %>% tibble::tibble() %>% mutate(class= ifelse(. < threshold, 1, 0)) %>% as.matrix()
+  preds <- torch_tensor(preds)[,2] 
+  ziper <- data.frame(pred=as_array(preds), y=as_array(Y)) %>% mutate(positive=ifelse((pred==1) & (y==1), 1, 0), false_positive=ifelse((pred==1) & (y==0), 1,0))
+  return(c(sum(ziper$positive), sum(ziper$false_positive)))
+}
+
+X <- data.matrix(df_numeral_test[, !(names(df_numeral_test) %in% 'output')])
+Y <- data.matrix(df_numeral_test[, 'output'])
+X <- torch_tensor(X)
+Y <- torch_tensor(Y)$flatten()
+
+vals <- c(calc_nnet_acc(mod_07_base, X, Y, .1), calc_nnet_acc(mod_07_base, X, Y, .2), calc_nnet_acc(mod_07_base, X, Y, .3), calc_nnet_acc(mod_07_base, X, Y, .4), calc_nnet_acc(mod_07_base, X, Y, .5), calc_nnet_acc(mod_07_base, X, Y, .6), calc_nnet_acc(mod_07_base, X, Y, .7), calc_nnet_acc(mod_07_base, X, Y, .8), calc_nnet_acc(mod_07_base, X, Y, .9))
+
+
+X <- data.matrix(df_derive_numeral_test[, !(names(df_derive_numeral_test) %in% 'output')])
+Y <- data.matrix(df_derive_numeral_test[, 'output'])
+X <- torch_tensor(X)
+Y <- torch_tensor(Y)$flatten()
+vals_expand <- c(calc_nnet_acc(mod_07_expand, X, Y, .1), calc_nnet_acc(mod_07_expand, X, Y, .2), calc_nnet_acc(mod_07_expand, X, Y, .3), calc_nnet_acc(mod_07_expand, X, Y, .4), calc_nnet_acc(mod_07_expand, X, Y, .5), calc_nnet_acc(mod_07_expand, X, Y, .6), calc_nnet_acc(mod_07_expand, X, Y, .7), calc_nnet_acc(mod_07_expand, X, Y, .8), calc_nnet_acc(mod_07_expand, X, Y, .9))
+```
+
+
+In the first plot, we see that the same models as regression preform the best. The second plot is the ROC curve for the neural network using 9 different threshold values. We see that this curve is far from ideal. Overall, I would use accuracy to train the models as it is the main goal of the model. I would also train the neural network using the first method, with cross entropy loss, instead of the second way which allows us to classify by threshold. I trained the neural network using a threshold value of .33. The ROC curve may be different if we trained the network for each threshold level.
+
+```{r, evaluate_models_roc}
+all_caret_models <- resamples(list(linear_base = mod_01,
+                                    linear_expand = mod_02,
+                                    top_linear_base = mod_03,
+                                    second_linear_base = mod_04,
+                                    top_linear_expand = mod_05,
+                                    second_linear_expand = mod_06,
+                                    rf_base = mod_08_base,
+                                    rf_expand = mod_08_expand,
+                                    gbm_base = mod_09_base,
+                                    gbm_expand = mod_09_expand,
+                                    svm = mod_10,
+                                    glmboost = mod_11))
+dotplot(all_caret_models, metric=metric)
+
+X_base_nnet <- vals[c(TRUE, FALSE)]
+Y_base_nnet <- vals[c(FALSE,TRUE)]
+
+X_expand_nnet <- vals_expand[c(TRUE, FALSE)]
+Y_expand_nnet <- vals_expand[c(FALSE,TRUE)]
+
+ziper <- data.frame(x1=X_base_nnet, x2=X_expand_nnet, y1=Y_base_nnet, y2=Y_expand_nnet)
+ziper %>% ggplot() + geom_line(mapping=aes(x=x1, y=y1)) + geom_line(mapping=aes(x=x2,y=y2), color="red")
+
+```
